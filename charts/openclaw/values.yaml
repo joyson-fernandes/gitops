@@ -10,7 +10,7 @@ replicas: 1
 
 gateway:
   port: 18789
-  bindAddress: "127.0.0.1"
+  bindAddress: "0.0.0.0"
 
 llm:
   provider: ollama
