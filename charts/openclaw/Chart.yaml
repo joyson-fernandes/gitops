@@ -1,0 +1,6 @@
+apiVersion: v2
+name: openclaw
+description: OpenClaw autonomous AI agent - secure deployment
+type: application
+version: 0.1.0
+appVersion: "latest"

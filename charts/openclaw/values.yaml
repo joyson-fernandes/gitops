@@ -1,0 +1,38 @@
+namespace: openclaw
+env: production
+
+image:
+  repository: openclaw/openclaw
+  tag: "latest"
+  pullPolicy: Always
+
+replicas: 1
+
+gateway:
+  port: 18789
+  bindAddress: "127.0.0.1"
+
+llm:
+  provider: ollama
+  baseUrl: "http://10.0.1.120:11434"
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 256Mi
+  limits:
+    cpu: "1"
+    memory: 512Mi
+
+persistence:
+  storageClass: ceph-block
+  size: 5Gi
+
+egress:
+  ollama:
+    ip: "10.0.1.120"
+    port: "11434"
+  messaging:
+    - "discord.com"
+    - "gateway.discord.gg"
+    - "api.telegram.org"

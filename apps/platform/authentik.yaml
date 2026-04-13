@@ -1,0 +1,75 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: authentik
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://charts.goauthentik.io
+    chart: authentik
+    targetRevision: "2026.2.1"
+    helm:
+      valuesObject:
+        authentik:
+          secret_key: ""
+          log_level: info
+          error_reporting:
+            enabled: false
+          postgresql:
+            host: prod-db-rw.linkvolt.svc.cluster.local
+            port: 5432
+            name: authentik
+            user: authentik
+            password: ""
+        global:
+          env:
+            - name: AUTHENTIK_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-credentials
+                  key: secret_key
+            - name: AUTHENTIK_POSTGRESQL__PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-credentials
+                  key: postgresql-password
+        postgresql:
+          enabled: false
+        server:
+          replicas: 1
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+          service:
+            type: LoadBalancer
+          metrics:
+            enabled: true
+            serviceMonitor:
+              enabled: false
+        worker:
+          replicas: 1
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+        serviceAccount:
+          create: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: authentik
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

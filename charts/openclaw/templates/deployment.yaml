@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openclaw
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: openclaw
+    tier: app
+    team: platform
+    env: {{ .Values.env }}
+spec:
+  replicas: {{ .Values.replicas }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: openclaw
+  template:
+    metadata:
+      labels:
+        app: openclaw
+        tier: app
+        team: platform
+        env: {{ .Values.env }}
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: openclaw
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          env:
+            - name: OPENCLAW_GATEWAY_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-gateway
+                  key: token
+            - name: OPENCLAW_CONFIG
+              value: /etc/openclaw/openclaw.json
+            - name: NODE_ENV
+              value: production
+          volumeMounts:
+            - name: config
+              mountPath: /etc/openclaw/openclaw.json
+              subPath: openclaw.json
+              readOnly: true
+            - name: soul
+              mountPath: /etc/openclaw/SOUL.md
+              subPath: SOUL.md
+              readOnly: true
+            - name: data
+              mountPath: /home/openclaw/.openclaw
+            - name: tmp
+              mountPath: /tmp
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: config
+          configMap:
+            name: openclaw-config
+        - name: soul
+          configMap:
+            name: openclaw-soul
+        - name: data
+          persistentVolumeClaim:
+            claimName: openclaw-data
+        - name: tmp
+          emptyDir:
+            sizeLimit: 100Mi

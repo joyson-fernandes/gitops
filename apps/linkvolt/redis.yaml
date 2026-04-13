@@ -1,0 +1,74 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: linkvolt-redis
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://charts.bitnami.com/bitnami
+    chart: redis
+    targetRevision: "25.3.2"
+    helm:
+      valuesObject:
+        commonLabels:
+          app: linkvolt-redis
+          team: platform
+          env: production
+        architecture: replication
+        auth:
+          enabled: false
+        sentinel:
+          enabled: true
+          masterSet: linkvolt-redis
+          quorum: 2
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+        master:
+          persistence:
+            size: 1Gi
+            storageClass: local-path
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+        replica:
+          replicaCount: 2
+          persistence:
+            size: 1Gi
+            storageClass: local-path
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - weight: 100
+                  podAffinityTerm:
+                    labelSelector:
+                      matchLabels:
+                        app.kubernetes.io/name: redis
+                    topologyKey: kubernetes.io/hostname
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: linkvolt
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

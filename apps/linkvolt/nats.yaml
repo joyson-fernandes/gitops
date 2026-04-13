@@ -1,0 +1,60 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: linkvolt-nats
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://nats-io.github.io/k8s/helm/charts
+    chart: nats
+    targetRevision: "1.2.6"
+    helm:
+      valuesObject:
+        container:
+          merge:
+            resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+              limits:
+                cpu: 500m
+                memory: 256Mi
+        reloader:
+          merge:
+            resources:
+              requests:
+                cpu: 50m
+                memory: 32Mi
+              limits:
+                cpu: 100m
+                memory: 64Mi
+        natsBox:
+          enabled: false
+        commonLabels:
+          app: linkvolt-nats
+          team: platform
+          env: production
+        config:
+          cluster:
+            enabled: true
+            replicas: 3
+          jetstream:
+            enabled: true
+            fileStore:
+              dir: /data/jetstream
+              pvc:
+                enabled: true
+                size: 2Gi
+                storageClassName: local-path
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: linkvolt
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
