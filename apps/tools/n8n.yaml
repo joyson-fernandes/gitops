@@ -8,9 +8,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: oci://8gears.container-registry.com/library
+    repoURL: https://8gears.github.io/n8n-helm-chart/
     chart: n8n
-    targetRevision: "1.0.0"
+    targetRevision: "0.26.2"
     helm:
       valuesObject:
         config:
