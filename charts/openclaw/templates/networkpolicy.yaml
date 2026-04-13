@@ -1,14 +1,21 @@
-# Deny all ingress — openclaw should receive NO inbound traffic
+# Allow ingress only from Traefik namespace
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
-  name: openclaw-deny-ingress
+  name: openclaw-ingress
   namespace: {{ .Values.namespace }}
 spec:
   endpointSelector:
     matchLabels:
       app: openclaw
-  ingress: []
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: traefik
+      toPorts:
+        - ports:
+            - port: {{ .Values.gateway.port | quote }}
+              protocol: TCP
 ---
 # Egress: DNS + Ollama + messaging platforms only
 apiVersion: cilium.io/v2

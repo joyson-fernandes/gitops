@@ -19,7 +19,7 @@ data:
         "provider": "{{ .Values.llm.provider }}",
         "baseUrl": "{{ .Values.llm.baseUrl }}"
       },
-      "dataDir": "/home/openclaw/.openclaw",
+      "dataDir": "/home/node/.openclaw",
       "soulFile": "/etc/openclaw/SOUL.md",
       "skills": {
         "autoInstall": false,

@@ -63,7 +63,7 @@ spec:
               subPath: SOUL.md
               readOnly: true
             - name: data
-              mountPath: /home/openclaw/.openclaw
+              mountPath: /home/node/.openclaw
             - name: tmp
               mountPath: /tmp
           resources:
