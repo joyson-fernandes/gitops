@@ -2,8 +2,8 @@ namespace: openclaw
 env: production
 
 image:
-  repository: openclaw/openclaw
-  tag: "latest"
+  repository: registry.joysontech.com/library/openclaw
+  tag: "v2026.3.7"
   pullPolicy: Always
 
 replicas: 1
