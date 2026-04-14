@@ -1,26 +1,43 @@
 # OpenClaw Setup Guide
 
-OpenClaw is an open-source autonomous AI agent deployed on the K8s cluster with hardened security. It connects to messaging platforms (Discord, Telegram) and executes tasks via Ollama LLM running locally on the Mac Studio.
+OpenClaw is an open-source autonomous AI agent deployed on the K8s cluster with hardened security. It connects to messaging platforms (Discord, Telegram) and executes tasks via LLMs.
 
 ## Architecture
 
 ```
-Mac Studio (10.0.1.120)          K8s Cluster
-┌──────────────┐                 ┌─────────────────────────────────┐
-│ Ollama :11434│◄────────────────│  openclaw namespace             │
-│ qwen3.5:27b  │   CiliumPolicy │  ┌───────────────────────────┐  │
-└──────────────┘   (egress only) │  │ OpenClaw Pod              │  │
-                                 │  │  - read-only root FS      │  │
-                                 │  │  - drop ALL capabilities  │  │
-                                 │  │  - non-root (UID 1000)    │  │
-                                 │  │  - seccomp RuntimeDefault │  │
-                                 │  └───────────────────────────┘  │
-                                 │  ┌──────────┐ ┌──────────────┐  │
-                                 │  │ PVC 5Gi  │ │ Vault Secret │  │
-                                 │  │ceph-block│ │gateway token │  │
-                                 │  └──────────┘ └──────────────┘  │
-                                 └─────────────────────────────────┘
+K8s Cluster
+┌─────────────────────────────────────────────────────┐
+│  traefik namespace          openclaw namespace       │
+│  ┌──────────┐               ┌─────────────────────┐ │
+│  │ Traefik  │──CiliumNP──►  │ OpenClaw Pod        │ │
+│  │ :443 TLS │   :18789      │  bind: lan (0.0.0.0)│ │
+│  └──────────┘               │  token auth         │ │
+│                             │  read-only root FS  │ │
+│                             │  drop ALL caps      │ │
+│                             │  non-root UID 1000  │ │
+│                             └─────────────────────┘ │
+│                             ┌──────────┐ ┌────────┐ │
+│                             │ PVC 5Gi  │ │ Vault  │ │
+│                             │ceph-block│ │ Secret │ │
+│                             └──────────┘ └────────┘ │
+└─────────────────────────────────────────────────────┘
 ```
+
+## Access
+
+**URL:** https://openclaw.joysontech.com (local network only, local CA TLS)
+
+**Login:** Open with token hash:
+```
+https://openclaw.joysontech.com/#token=<gateway-token>
+```
+
+**Get the token:**
+```bash
+kubectl get secret openclaw-gateway -n openclaw -o jsonpath='{.data.token}' | base64 -d
+```
+
+**DNS:** `openclaw.joysontech.com` → `10.0.1.25` (local DNS / /etc/hosts)
 
 ## Components
 
@@ -32,130 +49,80 @@ Mac Studio (10.0.1.120)          K8s Cluster
 | Vault Secret | `secret/openclaw/gateway` | 64-char gateway token |
 | Docker Image | `registry.joysontech.com/library/openclaw:v2026.3.7` | amd64, mirrored from GHCR |
 
-## Helm Chart Templates
+## Key Config: openclaw.json
 
-| Template | What it creates |
-|----------|----------------|
-| `deployment.yaml` | Hardened pod with security contexts |
-| `service.yaml` | ClusterIP on port 18789 |
-| `pvc.yaml` | 5Gi on ceph-block for `~/.openclaw` state |
-| `configmap.yaml` | `openclaw.json` — gateway config, Ollama LLM provider |
-| `configmap-soul.yaml` | `SOUL.md` — safety rules for the AI agent |
-| `external-secrets.yaml` | Gateway token from Vault via ESO |
-| `networkpolicy.yaml` | CiliumNetworkPolicy — Traefik ingress, scoped egress |
-| `ingressroute.yaml` | Traefik IngressRoute for `openclaw.joysontech.com` (local only) |
+The init container copies the ConfigMap to `~/.openclaw/openclaw.json` on every pod start. This is the official pattern from the OpenClaw K8s manifests.
+
+```json
+{
+  "gateway": {
+    "mode": "local",
+    "bind": "lan",
+    "port": 18789,
+    "auth": { "mode": "token" },
+    "controlUi": {
+      "enabled": true,
+      "allowedOrigins": ["https://openclaw.joysontech.com"],
+      "dangerouslyDisableDeviceAuth": true
+    }
+  }
+}
+```
+
+### Critical settings explained
+
+- **`bind: lan`** — listens on `0.0.0.0`. Must use bind modes (`lan`/`loopback`/`tailnet`/`auto`), NOT raw IPs like `0.0.0.0`.
+- **`auth.mode: token`** — must be an object `{"mode":"token"}`, not a string `"token"`.
+- **`dangerouslyDisableDeviceAuth: true`** — required for Kubernetes. Device pairing is incompatible with K8s (users can't approve pairing inside a container, connections are always proxied). This is safe because token auth + TLS + local-only middleware still protect access.
+- **`allowedOrigins`** — must include the exact origin URL used in the browser.
+- **`trustedProxies`** — NOT used. Only accepts exact IPs (no CIDRs), and pod IPs change on restart. Instead, `dangerouslyDisableDeviceAuth` handles the proxy case.
 
 ## Security Hardening
 
 ### Pod Security
-- `readOnlyRootFilesystem: true` — only `/home/node/.openclaw` (PVC) and `/tmp` (emptyDir 100Mi) are writable
-- `capabilities.drop: [ALL]` — no Linux capabilities
+- `readOnlyRootFilesystem: true` — only `~/.openclaw` (PVC) and `/tmp` (emptyDir 100Mi) writable
+- `capabilities.drop: [ALL]`, `allowPrivilegeEscalation: false`
 - `runAsNonRoot: true`, UID/GID 1000 (node user)
-- `allowPrivilegeEscalation: false`
 - `seccompProfile: RuntimeDefault`
-- `automountServiceAccountToken: false` — no K8s API access
+- `automountServiceAccountToken: false`
 
 ### Network Policy (CiliumNetworkPolicy)
 - **Ingress:** Only Traefik namespace on port 18789
-- **Egress:** DNS (kube-dns), Ollama (10.0.1.120:11434), messaging platforms (discord.com, gateway.discord.gg, api.telegram.org on :443)
-- **Namespace default-deny:** Catches any rogue pods
+- **Egress:** DNS (kube-dns), Ollama (10.0.1.120:11434), messaging platforms (:443)
 
-### Secrets
-- Gateway token stored in HashiCorp Vault at `secret/openclaw/gateway`
-- Synced to K8s via External Secrets Operator (1h refresh)
-- No LLM API key needed — Ollama is unauthenticated on local network
-
-### Skills
-- `autoInstall: false` — no ClawHub skills installed without explicit approval
-- Empty `allowList` — all skills blocked by default
-
-### SOUL.md Safety Rules
-- Requires human confirmation for destructive actions
-- No unapproved skill execution
-- No credential logging
-- No data exfiltration
-
-## Configuration
-
-### values.yaml
-```yaml
-image:
-  repository: registry.joysontech.com/library/openclaw
-  tag: "v2026.3.7"
-
-gateway:
-  port: 18789
-  bindAddress: "0.0.0.0"
-
-llm:
-  provider: ollama
-  baseUrl: "http://10.0.1.120:11434"    # Mac Studio, native API (NOT /v1)
-
-persistence:
-  storageClass: ceph-block
-  size: 5Gi
-
-egress:
-  ollama:
-    ip: "10.0.1.120"
-    port: "11434"
-  messaging:
-    - "discord.com"
-    - "gateway.discord.gg"
-    - "api.telegram.org"
-```
-
-### Key Config Decisions
-- **Ollama native API** — must use `http://host:11434`, NOT `/v1`. The `/v1` OpenAI-compatible endpoint breaks tool calling.
-- **Gateway on 0.0.0.0** — required for `kubectl port-forward` access. CiliumNetworkPolicy restricts actual ingress to Traefik only.
-- **ceph-block storage** — provides data durability across node failures for persistent agent state.
-- **Harbor registry** — image mirrored from `ghcr.io/openclaw/openclaw` to comply with Kyverno policies (restrict-registry, disallow-latest-tag).
-
-## Access
-
-### Via port-forward (direct)
-```bash
-kubectl port-forward -n openclaw deploy/openclaw 18789:18789
-# Open http://localhost:18789
-```
-
-### Via Traefik (local network)
-Access `https://openclaw.joysontech.com` (requires DNS A record pointing to 10.0.1.25).
-
-### Gateway Token
-```bash
-kubectl get secret openclaw-gateway -n openclaw -o jsonpath='{.data.token}' | base64 -d
-```
+### Access Control
+- Local CA TLS cert (trusted on Mac via system keychain)
+- `local-only` Traefik middleware (10.0.0.0/8 only)
+- Token auth (64-char hex from Vault)
 
 ## Updating the Image
 
-When a new OpenClaw version is released:
-
 ```bash
-# On CI runner (10.0.1.40)
+# On CI runner (10.0.1.40) — MUST use amd64, cluster is amd64
 ssh joyson@10.0.1.40
-
-# Pull amd64 image (IMPORTANT: cluster is amd64, Mac Studio is arm64)
 docker pull --platform linux/amd64 ghcr.io/openclaw/openclaw:latest
 docker tag ghcr.io/openclaw/openclaw:latest registry.joysontech.com/library/openclaw:vYYYY.X.X
 docker push registry.joysontech.com/library/openclaw:vYYYY.X.X
 ```
 
-Then update `charts/openclaw/values.yaml` with the new tag and push to gitops repo. ArgoCD auto-syncs.
+Update `charts/openclaw/values.yaml` with the new tag. ArgoCD auto-syncs.
 
 ## Troubleshooting
 
 ### "exec format error"
-Wrong architecture. The image was pulled on arm64 (Mac Studio) instead of amd64 (K8s workers). Re-pull with `--platform linux/amd64` on the CI runner.
+Wrong architecture. Pull with `--platform linux/amd64` on the CI runner (not Mac Studio which is arm64).
 
-### "disconnected (1000): no reason" in dashboard
-Gateway is binding to `127.0.0.1`. Change `bindAddress` to `0.0.0.0` in values.yaml.
+### "pairing required"
+`dangerouslyDisableDeviceAuth: true` is missing from `controlUi` config. Delete the PVC and restart so the init container writes the correct config.
 
-### "ENOENT: mkdir '/home/node/.openclaw'"
-PVC mounted at wrong path. The OpenClaw image runs as the `node` user with home at `/home/node`, not `/home/openclaw`.
+### "origin not allowed"
+Add your URL to `controlUi.allowedOrigins` in the configmap. Delete PVC + restart.
 
-### PVC Pending
-Check `kubectl get storageclass ceph-block` exists and Ceph is `HEALTH_OK`. If Ceph was rebuilt, restart the CSI controller pods in rook-ceph namespace.
+### "Config invalid / Unrecognized keys"
+OpenClaw's config schema is strict. Don't add `llm`, `skills`, or other non-standard keys at root level. Follow the official schema.
 
-### ExternalSecret not syncing
-Vault may be sealed. Check `kubectl get pods -n vault` — if `0/1`, unseal all 3 pods. Then restart ESO: `kubectl rollout restart deployment -n external-secrets`.
+### Config changes not taking effect
+The init container copies the configmap to the PVC. If the PVC already has a config, it gets overwritten on each restart. If ArgoCD hasn't synced the configmap yet, the old config gets copied. Fix: sync ArgoCD first, then delete PVC + pod.
+
+### Gateway binds to 127.0.0.1 despite config
+OpenClaw reads `~/.openclaw/openclaw.json`, NOT a mounted configmap path. The init container must copy the config there. Check the init container is working: `kubectl logs <pod> -c setup-config`.
