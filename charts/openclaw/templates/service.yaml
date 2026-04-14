@@ -13,6 +13,6 @@ spec:
     app: openclaw
   ports:
     - port: {{ .Values.gateway.port }}
-      targetPort: {{ .Values.gateway.port }}
+      targetPort: 18790
       protocol: TCP
       name: gateway
