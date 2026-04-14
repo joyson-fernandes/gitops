@@ -38,7 +38,7 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["openclaw"]
-          args: ["gateway", "--bind", "lan"]
+          args: ["gateway", "--bind", "lan", "--allow-unconfigured"]
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
