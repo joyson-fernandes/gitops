@@ -11,12 +11,14 @@ data:
   openclaw.json: |
     {
       "gateway": {
+        "mode": "local",
         "bind": "lan",
         "port": {{ .Values.gateway.port }},
-        "auth": "password",
-        "tokenEnvVar": "OPENCLAW_GATEWAY_TOKEN",
-        "passwordEnvVar": "OPENCLAW_GATEWAY_PASSWORD",
+        "auth": {
+          "mode": "token"
+        },
         "controlUi": {
+          "enabled": true,
           "allowedOrigins": ["https://openclaw.joysontech.com"]
         }
       },
@@ -24,8 +26,19 @@ data:
         "provider": "{{ .Values.llm.provider }}",
         "baseUrl": "{{ .Values.llm.baseUrl }}"
       },
-      "dataDir": "/home/node/.openclaw",
-      "soulFile": "/etc/openclaw/SOUL.md",
+      "agents": {
+        "defaults": {
+          "workspace": "~/.openclaw/workspace"
+        },
+        "list": [
+          {
+            "id": "default",
+            "name": "OpenClaw Assistant",
+            "workspace": "~/.openclaw/workspace"
+          }
+        ]
+      },
+      "cron": { "enabled": false },
       "skills": {
         "autoInstall": false,
         "allowList": []
