@@ -41,7 +41,11 @@ spec:
             - |
               cp /config/openclaw.json /home/node/.openclaw/openclaw.json
               mkdir -p /home/node/.openclaw/workspace
-              echo "Config copied"
+              mkdir -p /home/node/.openclaw/agents/default/agent
+              cat > /home/node/.openclaw/agents/default/agent/models.json <<'MODELS'
+              {"default":"ollama/qwen3.5:27b","providers":{"ollama":{"baseUrl":"http://10.0.1.120:11434","auth":"none","api":"openai-chat","models":[{"id":"qwen3.5:27b","name":"Qwen 3.5 27B","api":"openai-chat","reasoning":false,"input":["text"],"contextWindow":32768,"maxTokens":8192}]}}}
+              MODELS
+              echo "Config and models written"
           resources:
             requests:
               cpu: 10m
