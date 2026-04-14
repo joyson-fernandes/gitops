@@ -13,7 +13,9 @@ data:
       "gateway": {
         "bind": "lan",
         "port": {{ .Values.gateway.port }},
-        "tokenEnvVar": "OPENCLAW_GATEWAY_TOKEN"
+        "auth": "password",
+        "tokenEnvVar": "OPENCLAW_GATEWAY_TOKEN",
+        "passwordEnvVar": "OPENCLAW_GATEWAY_PASSWORD"
       },
       "llm": {
         "provider": "{{ .Values.llm.provider }}",

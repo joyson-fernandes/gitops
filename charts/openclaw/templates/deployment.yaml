@@ -73,6 +73,11 @@ spec:
                 secretKeyRef:
                   name: openclaw-gateway
                   key: token
+            - name: OPENCLAW_GATEWAY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-gateway
+                  key: password
             - name: OPENCLAW_CONFIG
               value: /etc/openclaw/openclaw.json
             - name: NODE_ENV
