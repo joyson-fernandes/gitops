@@ -25,15 +25,38 @@ data:
       },
       "agents": {
         "defaults": {
-          "workspace": "~/.openclaw/workspace"
+          "workspace": "~/.openclaw/workspace",
+          "model": "ollama/qwen3.5:27b"
         },
         "list": [
           {
             "id": "default",
             "name": "OpenClaw Assistant",
-            "workspace": "~/.openclaw/workspace"
+            "workspace": "~/.openclaw/workspace",
+            "model": "ollama/qwen3.5:27b"
           }
         ]
+      },
+      "models": {
+        "providers": {
+          "ollama": {
+            "baseUrl": "{{ .Values.llm.baseUrl }}",
+            "auth": "none",
+            "api": "openai-chat",
+            "models": [
+              {
+                "id": "qwen3.5:27b",
+                "name": "Qwen 3.5 27B",
+                "api": "openai-chat",
+                "reasoning": false,
+                "input": ["text"],
+                "contextWindow": 32768,
+                "maxTokens": 8192
+              }
+            ]
+          }
+        },
+        "default": "ollama/qwen3.5:27b"
       },
       "cron": { "enabled": false }
     }
