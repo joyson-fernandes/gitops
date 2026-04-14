@@ -40,7 +40,7 @@ spec:
           args:
             - |
               cat > /data/config.json <<'CFGEOF'
-              {"gateway":{"mode":"local","bind":"lan","auth":"password","controlUi":{"allowedOrigins":["https://openclaw.joysontech.com"]}}}
+              {"gateway":{"mode":"local","bind":"lan","auth":"password","trustedProxies":["127.0.0.1/32","10.0.0.0/8"],"controlUi":{"allowedOrigins":["https://openclaw.joysontech.com"]}}}
               CFGEOF
           volumeMounts:
             - name: data
