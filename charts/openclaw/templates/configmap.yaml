@@ -11,7 +11,7 @@ data:
   openclaw.json: |
     {
       "gateway": {
-        "host": "{{ .Values.gateway.bindAddress }}",
+        "bind": "lan",
         "port": {{ .Values.gateway.port }},
         "tokenEnvVar": "OPENCLAW_GATEWAY_TOKEN"
       },

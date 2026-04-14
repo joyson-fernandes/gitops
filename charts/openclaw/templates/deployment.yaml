@@ -53,8 +53,6 @@ spec:
               value: /etc/openclaw/openclaw.json
             - name: NODE_ENV
               value: production
-            - name: OPENCLAW_GATEWAY_BIND
-              value: "lan"
           volumeMounts:
             - name: config
               mountPath: /etc/openclaw/openclaw.json
