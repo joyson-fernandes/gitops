@@ -1,9 +1,13 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
+    "config:recommended",
+    ":automergeAll"
   ],
   "labels": ["dependencies"],
+  "automerge": true,
+  "automergeType": "pr",
+  "platformAutomerge": true,
   "prHourlyLimit": 5,
   "prConcurrentLimit": 10,
   "argocd": {
@@ -24,16 +28,9 @@
       "groupName": "grafana-stack"
     },
     {
-      "description": "Auto-merge patch updates for stable charts",
-      "matchUpdateTypes": ["patch"],
-      "automerge": true,
-      "automergeType": "pr"
-    },
-    {
-      "description": "Require manual review for major updates",
+      "description": "Major updates — auto-merge but label for visibility",
       "matchUpdateTypes": ["major"],
-      "labels": ["major-update"],
-      "automerge": false
+      "labels": ["major-update"]
     }
   ]
 }
