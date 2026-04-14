@@ -22,13 +22,10 @@ data:
           "allowedOrigins": ["https://openclaw.joysontech.com"]
         }
       },
-      "llm": {
-        "provider": "{{ .Values.llm.provider }}",
-        "baseUrl": "{{ .Values.llm.baseUrl }}"
-      },
       "agents": {
         "defaults": {
-          "workspace": "~/.openclaw/workspace"
+          "workspace": "~/.openclaw/workspace",
+          "model": "{{ .Values.llm.provider }}"
         },
         "list": [
           {
@@ -38,9 +35,5 @@ data:
           }
         ]
       },
-      "cron": { "enabled": false },
-      "skills": {
-        "autoInstall": false,
-        "allowList": []
-      }
+      "cron": { "enabled": false }
     }
