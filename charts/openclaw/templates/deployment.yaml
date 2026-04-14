@@ -51,6 +51,13 @@ spec:
           args: ["TCP-LISTEN:18790,fork,reuseaddr,bind=0.0.0.0", "TCP:127.0.0.1:18789"]
           ports:
             - containerPort: 18790
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 50m
+              memory: 32Mi
         - name: openclaw
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
