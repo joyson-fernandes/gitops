@@ -33,12 +33,22 @@ spec:
         fsGroup: 1000
         seccompProfile:
           type: RuntimeDefault
+      initContainers:
+        - name: write-gateway-config
+          image: busybox
+          command: ["sh", "-c"]
+          args:
+            - |
+              cat > /data/gateway.json <<'GWEOF'
+              {"bind":"lan","mode":"local"}
+              GWEOF
+          volumeMounts:
+            - name: data
+              mountPath: /data
       containers:
         - name: openclaw
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command: ["openclaw"]
-          args: ["gateway", "--bind", "lan", "--allow-unconfigured"]
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
