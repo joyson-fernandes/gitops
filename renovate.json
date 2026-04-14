@@ -1,0 +1,39 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "labels": ["dependencies"],
+  "prHourlyLimit": 5,
+  "prConcurrentLimit": 10,
+  "argocd": {
+    "fileMatch": ["apps/.+\\.yaml$"]
+  },
+  "helm-values": {
+    "fileMatch": ["charts/.+/values\\.yaml$"]
+  },
+  "packageRules": [
+    {
+      "description": "Group Rook-Ceph updates together",
+      "matchPackagePatterns": ["rook-ceph"],
+      "groupName": "rook-ceph"
+    },
+    {
+      "description": "Group Grafana stack updates",
+      "matchPackagePatterns": ["grafana", "loki", "promtail", "tempo"],
+      "groupName": "grafana-stack"
+    },
+    {
+      "description": "Auto-merge patch updates for stable charts",
+      "matchUpdateTypes": ["patch"],
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "description": "Require manual review for major updates",
+      "matchUpdateTypes": ["major"],
+      "labels": ["major-update"],
+      "automerge": false
+    }
+  ]
+}
