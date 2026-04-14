@@ -15,7 +15,10 @@ data:
         "port": {{ .Values.gateway.port }},
         "auth": "password",
         "tokenEnvVar": "OPENCLAW_GATEWAY_TOKEN",
-        "passwordEnvVar": "OPENCLAW_GATEWAY_PASSWORD"
+        "passwordEnvVar": "OPENCLAW_GATEWAY_PASSWORD",
+        "controlUi": {
+          "allowedOrigins": ["https://openclaw.joysontech.com"]
+        }
       },
       "llm": {
         "provider": "{{ .Values.llm.provider }}",
