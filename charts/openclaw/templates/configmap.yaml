@@ -41,13 +41,13 @@ data:
         "providers": {
           "ollama": {
             "baseUrl": "{{ .Values.llm.baseUrl }}",
-            "auth": "none",
-            "api": "openai-chat",
+            "auth": "api-key",
+            "api": "ollama",
             "models": [
               {
                 "id": "qwen3.5:27b",
                 "name": "Qwen 3.5 27B",
-                "api": "openai-chat",
+                "api": "ollama",
                 "reasoning": false,
                 "input": ["text"],
                 "contextWindow": 32768,
@@ -55,8 +55,7 @@ data:
               }
             ]
           }
-        },
-        "default": "ollama/qwen3.5:27b"
+        }
       },
       "cron": { "enabled": false }
     }
