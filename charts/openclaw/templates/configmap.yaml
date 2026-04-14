@@ -17,16 +17,15 @@ data:
         "auth": {
           "mode": "token"
         },
-        "trustedProxies": ["10.244.0.0/16", "10.0.0.0/8"],
         "controlUi": {
           "enabled": true,
-          "allowedOrigins": ["https://openclaw.joysontech.com"]
+          "allowedOrigins": ["https://openclaw.joysontech.com"],
+          "dangerouslyDisableDeviceAuth": true
         }
       },
       "agents": {
         "defaults": {
-          "workspace": "~/.openclaw/workspace",
-          "model": "{{ .Values.llm.provider }}"
+          "workspace": "~/.openclaw/workspace"
         },
         "list": [
           {
