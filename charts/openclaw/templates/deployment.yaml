@@ -39,9 +39,9 @@ spec:
           command: ["sh", "-c"]
           args:
             - |
-              cat > /data/gateway.json <<'GWEOF'
-              {"bind":"lan","mode":"local"}
-              GWEOF
+              cat > /data/config.json <<'CFGEOF'
+              {"gateway":{"mode":"local","bind":"lan"}}
+              CFGEOF
           volumeMounts:
             - name: data
               mountPath: /data
