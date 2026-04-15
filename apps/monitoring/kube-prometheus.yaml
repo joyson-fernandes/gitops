@@ -19,6 +19,8 @@ spec:
           adminPassword: J@y2dworld2916
           assertNoLeakedSecrets: false
           grafana.ini:
+            security:
+              allow_embedding: true
             auth.anonymous:
               enabled: true
               org_role: Editor
