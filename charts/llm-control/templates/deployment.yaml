@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm-control
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: llm-control
+    team: platform
+    env: {{ .Values.env }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: llm-control
+  template:
+    metadata:
+      labels:
+        app: llm-control
+        team: platform
+        env: {{ .Values.env }}
+    spec:
+      imagePullSecrets:
+        - name: harbor-pull-secret
+      containers:
+        - name: llm-control
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.port }}
+          env:
+            - name: PROXMOX_HOST
+              value: "10.0.1.65"
+            - name: PROXMOX_MAC
+              value: "ac:1f:6b:2d:54:c5"
+            - name: IPMI_HOST
+              value: "10.0.3.5"
+            - name: IPMI_USER
+              value: "ADMIN"
+            - name: IPMI_PASS
+              value: "ADMIN"
+            - name: SSH_KEY_PATH
+              value: "/app/ssh/id_rsa"
+          volumeMounts:
+            - name: ssh-key
+              mountPath: /app/ssh
+              readOnly: true
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: ssh-key
+          secret:
+            secretName: llm-control-ssh-key
+            defaultMode: 0600
