@@ -1,0 +1,21 @@
+namespace: uptime-kuma
+env: production
+
+image:
+  repository: louislam/uptime-kuma
+  tag: "1"
+  pullPolicy: Always
+
+port: 3001
+
+persistence:
+  storageClass: ceph-block
+  size: 2Gi
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
