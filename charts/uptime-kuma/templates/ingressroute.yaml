@@ -27,8 +27,19 @@ spec:
       middlewares:
         - name: local-only
           namespace: traefik
+        - name: strip-frame-options
       services:
         - name: uptime-kuma
           port: {{ .Values.port }}
   tls:
     secretName: uptime-joysontech-com-tls
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: strip-frame-options
+  namespace: {{ .Values.namespace }}
+spec:
+  headers:
+    customResponseHeaders:
+      X-Frame-Options: ""
