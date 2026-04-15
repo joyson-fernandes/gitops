@@ -1,15 +1,15 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: status-joysontech-com
+  name: uptime-joysontech-com
   namespace: {{ .Values.namespace }}
 spec:
-  secretName: status-joysontech-com-tls
+  secretName: uptime-joysontech-com-tls
   issuerRef:
     name: local-ca-issuer
     kind: ClusterIssuer
   dnsNames:
-    - status.joysontech.com
+    - uptime.joysontech.com
   duration: 8760h
   renewBefore: 720h
 ---
@@ -23,7 +23,7 @@ spec:
     - websecure
   routes:
     - kind: Rule
-      match: Host(`status.joysontech.com`)
+      match: Host(`uptime.joysontech.com`)
       middlewares:
         - name: local-only
           namespace: traefik
@@ -31,4 +31,4 @@ spec:
         - name: uptime-kuma
           port: {{ .Values.port }}
   tls:
-    secretName: status-joysontech-com-tls
+    secretName: uptime-joysontech-com-tls
