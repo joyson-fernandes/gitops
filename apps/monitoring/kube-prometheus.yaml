@@ -107,18 +107,8 @@ spec:
                       storage: 10Gi
             serviceMonitorSelectorNilUsesHelmValues: false
             additionalScrapeConfigs:
-              - job_name: external-collectors
-                scrape_interval: 30s
-                static_configs:
-                  - targets: ["10.0.1.40:9100"]
-                    labels:
-                      instance: joyson-ub01
-              - job_name: mac-studio
-                scrape_interval: 30s
-                static_configs:
-                  - targets: ["10.0.1.120:9100"]
-                    labels:
-                      instance: mac-studio
+              name: additional-scrape-configs
+              key: prometheus-additional.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
