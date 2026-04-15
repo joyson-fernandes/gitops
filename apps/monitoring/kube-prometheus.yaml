@@ -107,8 +107,8 @@ spec:
                       storage: 10Gi
             serviceMonitorSelectorNilUsesHelmValues: false
             additionalScrapeConfigs:
-              name: additional-scrape-configs
-              key: prometheus-additional.yaml
+              name: kube-prometheus-kube-prome-prometheus-scrape-confg
+              key: additional-scrape-configs.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
