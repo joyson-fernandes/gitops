@@ -19,6 +19,9 @@ spec:
           adminPassword: J@y2dworld2916
           assertNoLeakedSecrets: false
           grafana.ini:
+            auth.anonymous:
+              enabled: true
+              org_role: Viewer
             database:
               type: postgres
               host: prod-db-rw.linkvolt.svc.cluster.local:5432
