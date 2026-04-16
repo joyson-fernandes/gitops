@@ -1,15 +1,15 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: displays-joysontech-com
+  name: viewlink-joysontech-com
   namespace: {{ .Values.namespace }}
 spec:
-  secretName: displays-joysontech-com-tls
+  secretName: viewlink-joysontech-com-tls
   issuerRef:
     name: local-ca-issuer
     kind: ClusterIssuer
   dnsNames:
-    - displays.joysontech.com
+    - viewlink.joysontech.com
   duration: 8760h
   renewBefore: 720h
 ---
@@ -23,7 +23,7 @@ spec:
     - websecure
   routes:
     - kind: Rule
-      match: Host(`displays.joysontech.com`)
+      match: Host(`viewlink.joysontech.com`)
       middlewares:
         - name: local-only
           namespace: traefik
@@ -31,4 +31,4 @@ spec:
         - name: display-manager
           port: {{ .Values.port }}
   tls:
-    secretName: displays-joysontech-com-tls
+    secretName: viewlink-joysontech-com-tls
