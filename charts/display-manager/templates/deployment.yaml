@@ -9,6 +9,8 @@ metadata:
     env: {{ .Values.env }}
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: display-manager
