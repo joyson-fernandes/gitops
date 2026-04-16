@@ -3,7 +3,7 @@ env: production
 
 image:
   repository: registry.joysontech.com/library/display-manager
-  tag: "v1.0.0"
+  tag: "fc30ede"
   pullPolicy: Always
 
 port: 8092
