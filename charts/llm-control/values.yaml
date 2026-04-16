@@ -3,7 +3,7 @@ env: production
 
 image:
   repository: registry.joysontech.com/library/llm-control
-  tag: "a0a8139"
+  tag: "adb0288"
   pullPolicy: Always
 
 port: 8090
