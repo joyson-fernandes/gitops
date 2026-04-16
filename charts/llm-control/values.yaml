@@ -3,7 +3,7 @@ env: production
 
 image:
   repository: registry.joysontech.com/library/llm-control
-  tag: "867685c"
+  tag: "18b67ee"
   pullPolicy: Always
 
 port: 8090
