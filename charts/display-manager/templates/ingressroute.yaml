@@ -1,0 +1,34 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: displays-joysontech-com
+  namespace: {{ .Values.namespace }}
+spec:
+  secretName: displays-joysontech-com-tls
+  issuerRef:
+    name: local-ca-issuer
+    kind: ClusterIssuer
+  dnsNames:
+    - displays.joysontech.com
+  duration: 8760h
+  renewBefore: 720h
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: display-manager
+  namespace: {{ .Values.namespace }}
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`displays.joysontech.com`)
+      middlewares:
+        - name: local-only
+          namespace: traefik
+      services:
+        - name: display-manager
+          port: {{ .Values.port }}
+  tls:
+    secretName: displays-joysontech-com-tls

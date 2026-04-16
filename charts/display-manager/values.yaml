@@ -1,0 +1,17 @@
+namespace: display-manager
+env: production
+
+image:
+  repository: registry.joysontech.com/library/display-manager
+  tag: "v1.0.0"
+  pullPolicy: Always
+
+port: 8092
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
