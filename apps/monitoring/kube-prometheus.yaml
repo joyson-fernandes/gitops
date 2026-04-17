@@ -35,6 +35,8 @@ spec:
               secretKeyRef:
                 name: grafana-db-password
                 key: password
+          deploymentStrategy:
+            type: Recreate
           persistence:
             enabled: true
             size: 2Gi
