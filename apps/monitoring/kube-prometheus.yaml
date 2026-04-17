@@ -94,6 +94,8 @@ spec:
               memory: 64Mi
         prometheus:
           prometheusSpec:
+            replicas: 2
+            podAntiAffinity: soft
             resources:
               requests:
                 cpu: 200m
