@@ -3,7 +3,7 @@ env: production
 
 image:
   repository: registry.joysontech.com/library/display-manager
-  tag: "252d210"
+  tag: "255a76f"
   pullPolicy: Always
 
 port: 8092
