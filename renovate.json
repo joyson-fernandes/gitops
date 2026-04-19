@@ -32,6 +32,16 @@
       "description": "Major updates — auto-merge but label for visibility",
       "matchUpdateTypes": ["major"],
       "labels": ["major-update"]
+    },
+    {
+      "description": "Hold off major bumps for infra charts with breaking-change risk — require a deliberate PR review",
+      "matchPackageNames": [
+        "nats",
+        "louislam/uptime-kuma",
+        "kube-prometheus-stack"
+      ],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
     }
   ]
 }
