@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phpipam-web
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: phpipam
+    tier: app
+    team: platform
+    env: {{ .Values.env }}
+spec:
+  replicas: {{ .Values.web.replicas }}
+  selector:
+    matchLabels:
+      app: phpipam
+      tier: app
+  template:
+    metadata:
+      labels:
+        app: phpipam
+        tier: app
+        team: platform
+        env: {{ .Values.env }}
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: phpipam-web
+          image: "{{ .Values.web.image.repository }}:{{ .Values.web.image.tag }}"
+          imagePullPolicy: {{ .Values.web.image.pullPolicy }}
+          ports:
+            - containerPort: 80
+              name: http
+          env:
+            - name: TZ
+              value: {{ .Values.timezone }}
+            - name: IPAM_DATABASE_HOST
+              value: phpipam-mariadb
+            - name: IPAM_DATABASE_NAME
+              value: {{ .Values.mariadb.database }}
+            - name: IPAM_DATABASE_USER
+              value: {{ .Values.mariadb.user }}
+            - name: IPAM_DATABASE_WEBHOST
+              value: "%"
+            - name: IPAM_DISABLE_INSTALLER
+              value: "1"
+            - name: IPAM_TRUST_X_FORWARDED
+              value: "true"
+            - name: IPAM_DATABASE_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: phpipam-db
+                  key: user-password
+          resources:
+            {{- toYaml .Values.web.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 30

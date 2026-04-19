@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: phpipam-mariadb
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: phpipam
+    tier: db
+    team: platform
+    env: {{ .Values.env }}
+spec:
+  clusterIP: None
+  selector:
+    app: phpipam
+    tier: db
+  ports:
+    - port: 3306
+      targetPort: mysql
+      name: mysql

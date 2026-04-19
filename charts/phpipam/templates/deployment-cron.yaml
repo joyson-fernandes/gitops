@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phpipam-cron
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: phpipam
+    tier: cron
+    team: platform
+    env: {{ .Values.env }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: phpipam
+      tier: cron
+  template:
+    metadata:
+      labels:
+        app: phpipam
+        tier: cron
+        team: platform
+        env: {{ .Values.env }}
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: phpipam-cron
+          image: "{{ .Values.cron.image.repository }}:{{ .Values.cron.image.tag }}"
+          imagePullPolicy: {{ .Values.cron.image.pullPolicy }}
+          env:
+            - name: TZ
+              value: {{ .Values.timezone }}
+            - name: IPAM_DATABASE_HOST
+              value: phpipam-mariadb
+            - name: IPAM_DATABASE_NAME
+              value: {{ .Values.mariadb.database }}
+            - name: IPAM_DATABASE_USER
+              value: {{ .Values.mariadb.user }}
+            - name: IPAM_DATABASE_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: phpipam-db
+                  key: user-password
+            - name: SCAN_INTERVAL
+              value: {{ .Values.cron.scanInterval | quote }}
+          resources:
+            {{- toYaml .Values.cron.resources | nindent 12 }}

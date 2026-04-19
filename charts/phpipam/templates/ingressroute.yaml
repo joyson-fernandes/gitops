@@ -1,0 +1,29 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ipam-joysontech-com
+  namespace: {{ .Values.namespace }}
+spec:
+  secretName: ipam-joysontech-com-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+    - {{ .Values.host }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: phpipam
+  namespace: {{ .Values.namespace }}
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`{{ .Values.host }}`)
+      services:
+        - name: phpipam-web
+          port: 80
+  tls:
+    secretName: ipam-joysontech-com-tls

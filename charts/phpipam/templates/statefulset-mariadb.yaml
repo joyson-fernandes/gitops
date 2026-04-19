@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: phpipam-mariadb
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: phpipam
+    tier: db
+    team: platform
+    env: {{ .Values.env }}
+spec:
+  serviceName: phpipam-mariadb
+  replicas: 1
+  selector:
+    matchLabels:
+      app: phpipam
+      tier: db
+  template:
+    metadata:
+      labels:
+        app: phpipam
+        tier: db
+        team: platform
+        env: {{ .Values.env }}
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        fsGroup: 999
+      containers:
+        - name: mariadb
+          image: "{{ .Values.mariadb.image.repository }}:{{ .Values.mariadb.image.tag }}"
+          imagePullPolicy: {{ .Values.mariadb.image.pullPolicy }}
+          ports:
+            - containerPort: 3306
+              name: mysql
+          env:
+            - name: TZ
+              value: {{ .Values.timezone }}
+            - name: MYSQL_DATABASE
+              value: {{ .Values.mariadb.database }}
+            - name: MYSQL_USER
+              value: {{ .Values.mariadb.user }}
+            - name: MYSQL_ROOT_HOST
+              value: "%"
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: phpipam-db
+                  key: root-password
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: phpipam-db
+                  key: user-password
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/mysql
+          resources:
+            {{- toYaml .Values.mariadb.resources | nindent 12 }}
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "mariadb-admin ping -h 127.0.0.1 -u root -p\"$MYSQL_ROOT_PASSWORD\""]
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "mariadb-admin ping -h 127.0.0.1 -u root -p\"$MYSQL_ROOT_PASSWORD\""]
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 5
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: {{ .Values.mariadb.storage.storageClass }}
+        resources:
+          requests:
+            storage: {{ .Values.mariadb.storage.size }}

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: phpipam
+description: phpIPAM (web + cron) with MariaDB, migrated from 10.0.1.145
+type: application
+version: 0.1.0
+appVersion: "1.7.4"
