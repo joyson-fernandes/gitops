@@ -12,6 +12,7 @@ spec:
     chart: kyverno
     targetRevision: "3.7.1"
     helm:
+      skipCrds: true
       valuesObject:
         features:
           legacyPolicies:
