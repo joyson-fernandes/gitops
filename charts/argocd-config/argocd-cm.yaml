@@ -12,7 +12,7 @@ data:
     if obj.status ~= nil and obj.status.ceph ~= nil then
       local health = obj.status.ceph.health
       local details = obj.status.ceph.details or {}
-      local ignored = { BLUESTORE_SLOW_OP_ALERT = true }
+      local ignored = { BLUESTORE_SLOW_OP_ALERT = true, DB_DEVICE_STALLED_READ_ALERT = true, OSD_SLOW_PING_TIME_BACK = true, OSD_SLOW_PING_TIME_FRONT = true }
       if health == "HEALTH_OK" then
         hs.status = "Healthy"
         hs.message = health
