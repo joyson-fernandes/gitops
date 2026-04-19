@@ -16,6 +16,9 @@ spec:
         features:
           legacyPolicies:
             enabled: true
+          policyExceptions:
+            enabled: true
+            namespace: "*"
         admissionController:
           replicas: 1
           resources:

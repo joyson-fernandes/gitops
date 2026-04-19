@@ -1,0 +1,21 @@
+apiVersion: kyverno.io/v2
+kind: PolicyException
+metadata:
+  name: crowdsec-exceptions
+  namespace: crowdsec
+spec:
+  exceptions:
+    - policyName: require-labels
+      ruleNames:
+        - require-app-team-env-labels
+        - autogen-require-app-team-env-labels
+    - policyName: restrict-registry
+      ruleNames:
+        - restrict-to-harbor
+        - autogen-restrict-to-harbor
+        - autogen-cronjob-restrict-to-harbor
+  match:
+    any:
+      - resources:
+          namespaces:
+            - crowdsec
