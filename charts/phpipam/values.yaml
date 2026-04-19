@@ -34,7 +34,7 @@ cron:
 mariadb:
   image:
     repository: mariadb
-    tag: "11.8"
+    tag: "12.2"
     pullPolicy: IfNotPresent
   database: phpipam
   user: phpipam
