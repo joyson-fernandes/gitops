@@ -116,6 +116,12 @@ spec:
               enabled: true
               name: additional-scrape-configs
               key: prometheus-additional.yaml
+            alertingEndpoints:
+              - name: kube-prometheus-grafana
+                namespace: monitoring
+                port: http-web
+                pathPrefix: /api/alertmanager/grafana
+                apiVersion: v2
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
