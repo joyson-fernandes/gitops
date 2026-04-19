@@ -15,24 +15,54 @@ spec:
         valuesObject:
           deployment:
             replicas: 3
+            additionalVolumes:
+              - name: crowdsec-bouncer-key
+                secret:
+                  secretName: crowdsec-bouncer-key
+          additionalVolumeMounts:
+            - name: crowdsec-bouncer-key
+              mountPath: /etc/traefik/crowdsec-bouncer-key
+              readOnly: true
           service:
             type: LoadBalancer
             spec:
               loadBalancerIP: "10.0.1.25"
           api:
             dashboard: true
-            insecure: true
+            insecure: false
           ingressRoute:
             dashboard:
+              enabled: false
+          logs:
+            access:
               enabled: true
+              format: json
+          metrics:
+            prometheus:
+              entryPoint: metrics
+              addEntryPointsLabels: true
+              addServicesLabels: true
+          experimental:
+            plugins:
+              crowdsec:
+                moduleName: github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin
+                version: v1.4.2
           ports:
             web:
               port: 80
             websecure:
               port: 443
+            metrics:
+              port: 9100
+              expose:
+                default: false
+              exposedPort: 9100
+              protocol: TCP
           additionalArguments:
             - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
             - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+            - "--entrypoints.web.http.middlewares=traefik-crowdsec@kubernetescrd,traefik-rate-limit@kubernetescrd"
+            - "--entrypoints.websecure.http.middlewares=traefik-crowdsec@kubernetescrd,traefik-rate-limit@kubernetescrd,traefik-security-headers@kubernetescrd"
           providers:
             kubernetesIngress:
               enabled: true
