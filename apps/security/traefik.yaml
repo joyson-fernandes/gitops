@@ -42,6 +42,14 @@ spec:
               entryPoint: metrics
               addEntryPointsLabels: true
               addServicesLabels: true
+              service:
+                enabled: true
+              serviceMonitor:
+                enabled: true
+                namespaceSelector:
+                  any: true
+                metricRelabelings: []
+                relabelings: []
           experimental:
             plugins:
               crowdsec:
