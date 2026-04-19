@@ -1,0 +1,21 @@
+namespace: cloudflared
+env: production
+
+image:
+  repository: cloudflare/cloudflared
+  tag: "latest"
+  pullPolicy: Always
+
+replicas: 2
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+vault:
+  path: cloudflared/tunnel
+  key: token
