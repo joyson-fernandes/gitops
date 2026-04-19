@@ -42,6 +42,15 @@ spec:
           metrics:
             serviceMonitor:
               enabled: true
+          extraVolumes:
+            - name: console-credentials
+              secret:
+                secretName: crowdsec-online-api-credentials
+          extraVolumeMounts:
+            - name: console-credentials
+              mountPath: /etc/crowdsec/online_api_credentials.yaml
+              subPath: online_api_credentials.yaml
+              readOnly: true
           persistentVolume:
             config:
               enabled: true
