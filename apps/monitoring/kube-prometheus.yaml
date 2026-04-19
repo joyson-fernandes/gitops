@@ -68,6 +68,42 @@ spec:
               searchNamespace: ALL
           service:
             type: LoadBalancer
+          alerting:
+            contactpoints.yaml:
+              apiVersion: 1
+              contactPoints:
+                - orgId: 1
+                  name: discord-alerts
+                  receivers:
+                    - uid: discord-alerts
+                      type: discord
+                      disableResolveMessage: false
+                      settings:
+                        url: https://discord.com/api/webhooks/1488523135673438218/LwHduAqgfJlKe5SualXjPm8TgsQrElaVmbHVb_SzWieTPiAfBQtfNzfN-0MlfUPokpn6
+                        use_discord_username: false
+                        title: '{{ `{{ .CommonAnnotations.summary }}` }}'
+                        message: |
+                          {{ `{{ range .Alerts }}**[{{ .Status | toUpper }}]** {{ .Labels.alertname }}
+                          {{ .Annotations.summary }}
+                          {{ if .Annotations.description }}{{ .Annotations.description }}
+                          {{ end }}{{ if .Labels.severity }}severity: {{ .Labels.severity }}
+                          {{ end }}{{ if .Labels.pod }}pod: {{ .Labels.pod }}
+                          {{ end }}{{ if .Labels.namespace }}ns: {{ .Labels.namespace }}
+                          {{ end }}{{ end }}` }}
+            policies.yaml:
+              apiVersion: 1
+              policies:
+                - orgId: 1
+                  receiver: discord-alerts
+                  group_by: [grafana_folder, alertname, pod]
+                  group_wait: 10s
+                  group_interval: 1m
+                  repeat_interval: 4h
+                  routes:
+                    - receiver: discord-alerts
+                      object_matchers:
+                        - [severity, =~, warning|critical]
+                      continue: false
         prometheusOperator:
           resources:
             requests:
