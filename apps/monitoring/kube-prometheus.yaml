@@ -141,6 +141,7 @@ spec:
               limits:
                 cpu: 1000m
                 memory: 2Gi
+            retentionSize: 15GB
             storageSpec:
               volumeClaimTemplate:
                 spec:
@@ -148,7 +149,7 @@ spec:
                   accessModes: ["ReadWriteOnce"]
                   resources:
                     requests:
-                      storage: 10Gi
+                      storage: 20Gi
             serviceMonitorSelectorNilUsesHelmValues: false
             additionalScrapeConfigsSecret:
               enabled: true
