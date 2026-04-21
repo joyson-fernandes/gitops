@@ -24,3 +24,19 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+  # Ignore cosmetic drift introduced by controllers defaulting fields we
+  # don't set in git (ESO adds conversion/decoding/metadata policies; the
+  # STS controller adds volumeClaimTemplate.status + auto-generated labels
+  # on the Qdrant PVC template).
+  ignoreDifferences:
+    - group: external-secrets.io
+      kind: ExternalSecret
+      jqPathExpressions:
+        - .spec.data[].remoteRef.conversionStrategy
+        - .spec.data[].remoteRef.decodingStrategy
+        - .spec.data[].remoteRef.metadataPolicy
+    - group: apps
+      kind: StatefulSet
+      jqPathExpressions:
+        - .spec.volumeClaimTemplates[].status
+        - .spec.volumeClaimTemplates[].metadata.creationTimestamp
