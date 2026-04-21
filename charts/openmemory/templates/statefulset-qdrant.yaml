@@ -54,6 +54,11 @@ spec:
               value: "6333"
             - name: QDRANT__SERVICE__GRPC_PORT
               value: "6334"
+            # Keep snapshots on the PVC too — the default "./snapshots" path
+            # lives on the read-only base image layer and the fsGroup bit
+            # only applies to mounted volumes.
+            - name: QDRANT__STORAGE__SNAPSHOTS_PATH
+              value: /qdrant/storage/snapshots
           volumeMounts:
             - name: data
               mountPath: /qdrant/storage

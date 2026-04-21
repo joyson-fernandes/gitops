@@ -69,6 +69,11 @@ spec:
                 secretKeyRef:
                   name: openmemory-config
                   key: OPENAI_API_KEY
+            # mem0 SDK calls os.makedirs(os.path.expanduser("~/.mem0")) on
+            # import. Point HOME at /tmp (emptyDir, writable) so the rootfs
+            # can stay read-only.
+            - name: HOME
+              value: /tmp
           volumeMounts:
             - name: tmp
               mountPath: /tmp
