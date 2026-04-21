@@ -75,10 +75,23 @@ spec:
             - name: console-credentials
               secret:
                 secretName: crowdsec-online-api-credentials
+            # Chart mounts the config.yaml.local ConfigMap at
+            # /etc/crowdsec_data/config.yaml.local, but crowdsec's
+            # config_paths.config_dir is /etc/crowdsec/, so the .local overlay
+            # is read from /etc/crowdsec/config.yaml.local only. Re-mount the
+            # same ConfigMap at the correct path so auto_registration actually
+            # takes effect. (Upstream chart bug — raise a PR if still present.)
+            - name: config-local-correct-path
+              configMap:
+                name: crowdsec-config-local
           extraVolumeMounts:
             - name: console-credentials
               mountPath: /etc/crowdsec/online_api_credentials.yaml
               subPath: online_api_credentials.yaml
+              readOnly: true
+            - name: config-local-correct-path
+              mountPath: /etc/crowdsec/config.yaml.local
+              subPath: config.yaml.local
               readOnly: true
           persistentVolume:
             config:
