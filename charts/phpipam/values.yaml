@@ -6,7 +6,7 @@ host: ipam.joysontech.com
 web:
   image:
     repository: phpipam/phpipam-www
-    tag: "v1.7.4"
+    tag: "v1.8.0"
     pullPolicy: IfNotPresent
   replicas: 1
   resources:
