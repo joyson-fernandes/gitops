@@ -13,6 +13,24 @@ spec:
     targetRevision: "0.23.0"
     helm:
       valuesObject:
+        # Explicit auto_registration block. The chart default at config.config.yaml.local
+        # already contains this, but our running LAPI pod has no config.yaml.local on
+        # disk (verified 2026-04-21 — api.server stanza contains only log_level).
+        # Without it, `cscli lapi register` persists agents as "not validated" and
+        # every new DS rollout has agents crash-loop on /v1/watchers/login 401 until
+        # someone runs `cscli machines validate` manually. Pod CIDR 10.244.0.0/16
+        # is covered by the 10.0.0.0/8 range; the 192.168 / 172.16 ranges are trimmed.
+        config:
+          config.yaml.local: |
+            api:
+              server:
+                auto_registration:
+                  enabled: true
+                  token: "${REGISTRATION_TOKEN}"
+                  allowed_ranges:
+                    - "10.244.0.0/16"
+                    - "10.0.0.0/8"
+                    - "127.0.0.1/32"
         commonLabels:
           app: crowdsec
           team: platform
