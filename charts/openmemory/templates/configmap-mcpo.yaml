@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openmemory-mcpo-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: openmemory
+    tier: app
+    team: platform
+    env: {{ .Values.env }}
+data:
+  config.json: |
+    {
+      "mcpServers": {
+        "openmemory": {
+          "type": "sse",
+          "url": "http://openmemory-api.{{ .Values.namespace }}.svc.cluster.local:8765/mcp/{{ .Values.mcpo.clientName }}/sse/{{ .Values.userId }}"
+        }
+      }
+    }

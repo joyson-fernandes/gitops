@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: openmemory-mcpo
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: openmemory
+    tier: app
+    team: platform
+    env: {{ .Values.env }}
+    component: mcpo
+spec:
+  # LoadBalancer so Open WebUI on LXC 105 (10.0.1.3) can reach it directly
+  # without another DNS + TLS round. Auth is enforced by the MCPO_API_KEY.
+  type: LoadBalancer
+  externalTrafficPolicy: Local
+  selector:
+    app: openmemory
+    tier: app
+    component: mcpo
+  ports:
+    - name: http
+      port: {{ .Values.mcpo.port }}
+      targetPort: http
+      protocol: TCP

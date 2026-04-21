@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openmemory-mcpo
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: openmemory
+    tier: app
+    team: platform
+    env: {{ .Values.env }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  replicas: {{ .Values.replicas.mcpo }}
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: openmemory
+      tier: app
+      component: mcpo
+  template:
+    metadata:
+      labels:
+        app: openmemory
+        tier: app
+        team: platform
+        env: {{ .Values.env }}
+        component: mcpo
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: mcpo
+          image: "{{ .Values.image.mcpo.repository }}:{{ .Values.image.mcpo.tag }}"
+          imagePullPolicy: {{ .Values.image.mcpo.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.mcpo.port }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          command: ["mcpo"]
+          args:
+            - "--host=0.0.0.0"
+            - "--port={{ .Values.mcpo.port }}"
+            - "--api-key=$(MCPO_API_KEY)"
+            - "--config=/etc/mcpo/config.json"
+          env:
+            - name: MCPO_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: openmemory-mcpo
+                  key: MCPO_API_KEY
+          volumeMounts:
+            - name: config
+              mountPath: /etc/mcpo
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+          resources:
+            {{- toYaml .Values.resources.mcpo | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /openmemory/openapi.json
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 30
+      volumes:
+        - name: config
+          configMap:
+            name: openmemory-mcpo-config
+        - name: tmp
+          emptyDir:
+            sizeLimit: 50Mi

@@ -22,10 +22,22 @@ image:
     repository: qdrant/qdrant
     tag: "v1.14.0"
     pullPolicy: IfNotPresent
+  mcpo:
+    repository: ghcr.io/open-webui/mcpo
+    tag: "main"
+    pullPolicy: Always
 
 replicas:
   api: 1
   ui: 1
+  mcpo: 1
+
+# mcpo (Open WebUI's MCP→OpenAPI proxy). Exposes the same MCP tools as a
+# regular OpenAPI tool server so Open WebUI can consume them (OWUI doesn't
+# speak MCP natively). Auth via an API key stored in Vault secret/openmemory/mcpo.
+mcpo:
+  port: 8000
+  clientName: openwebui    # becomes the <client> segment in the SSE URL
 
 # LLM + embedder — all local via Ollama on Mac Studio.
 # NOTE: OpenMemory's mem0 config lives in the Postgres `configs` table, NOT in
@@ -86,3 +98,10 @@ resources:
     limits:
       cpu: 200m
       memory: 128Mi
+  mcpo:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi

@@ -22,6 +22,29 @@ spec:
             - port: "3000"
               protocol: TCP
 ---
+# Ingress to mcpo from the LAN (Open WebUI at 10.0.1.3). Auth is enforced by
+# the MCPO_API_KEY so we accept from any LAN source. Uses externalTrafficPolicy:
+# Local on the Service so the source IP is preserved.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: openmemory-mcpo-ingress
+  namespace: {{ .Values.namespace }}
+spec:
+  endpointSelector:
+    matchLabels:
+      app: openmemory
+      component: mcpo
+  ingress:
+    - fromEntities:
+        - host
+        - remote-node
+        - world
+      toPorts:
+        - ports:
+            - port: {{ .Values.mcpo.port | quote }}
+              protocol: TCP
+---
 # API → Qdrant (same namespace, both ports)
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
