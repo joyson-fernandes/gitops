@@ -13,6 +13,19 @@ spec:
     targetRevision: "0.23.0"
     helm:
       valuesObject:
+        # Pin the LAPI credentials (csLapiSecret + registrationToken) to a
+        # Vault-backed ExternalSecret so the chart stops regenerating them
+        # on every sync. Regeneration was re-hashing the pod template's
+        # checksum/lapi-secret annotation, which caused LAPI to roll ~daily
+        # and (because the chart uses Deployment strategy: Recreate with an
+        # RWO PVC) briefly left crowdsec-service with zero endpoints —
+        # Cilium socket-LB then returns -EPERM on connect(2) to the ClusterIP,
+        # which looked like random agent heartbeat failures every 24h.
+        # The ExternalSecret lives in crowdsec-externalsecret.yaml; it must
+        # exist before this chart syncs so the secret keys are readable.
+        secrets:
+          externalSecret:
+            name: crowdsec-lapi-secrets-vault
         # Explicit auto_registration block. The chart default at config.config.yaml.local
         # already contains this, but our running LAPI pod has no config.yaml.local on
         # disk (verified 2026-04-21 — api.server stanza contains only log_level).
