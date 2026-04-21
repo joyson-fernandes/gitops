@@ -75,11 +75,14 @@ spec:
             initialDelaySeconds: 60
             periodSeconds: 30
   volumeClaimTemplates:
-    - metadata:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
         name: data
       spec:
         accessModes: ["ReadWriteOnce"]
         storageClassName: {{ .Values.qdrant.storageClass }}
+        volumeMode: Filesystem
         resources:
           requests:
             storage: {{ .Values.qdrant.size }}
