@@ -1,0 +1,72 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: openmemory-llm-seed
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: openmemory
+    tier: app
+    team: platform
+    env: {{ .Values.env }}
+  annotations:
+    # PostSync so the API is already reachable. Idempotent PUT — runs every
+    # sync, keeps the DB-stored mem0 config aligned with chart values.
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata:
+      labels:
+        app: openmemory
+        tier: app
+        team: platform
+        env: {{ .Values.env }}
+    spec:
+      restartPolicy: OnFailure
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: seed
+          image: curlimages/curl:8.10.1
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          command: ["sh", "-c"]
+          args:
+            - |
+              set -eu
+              API="http://openmemory-api.{{ .Values.namespace }}.svc.cluster.local:8765"
+              echo "[seed] waiting for $API"
+              for i in $(seq 1 30); do
+                if curl -sf "$API/docs" >/dev/null; then break; fi
+                sleep 2
+              done
+              echo "[seed] PUT mem0 LLM config"
+              curl -sf -X PUT "$API/api/v1/config/mem0/llm" \
+                -H "Content-Type: application/json" \
+                -d '{"provider":"{{ .Values.llm.provider }}","config":{"model":"{{ .Values.llm.chatModel }}","temperature":0.1,"max_tokens":2000,"ollama_base_url":"{{ .Values.llm.ollamaUrl }}"}}' \
+                > /dev/null
+              echo "[seed] PUT mem0 embedder config"
+              curl -sf -X PUT "$API/api/v1/config/mem0/embedder" \
+                -H "Content-Type: application/json" \
+                -d '{"provider":"{{ .Values.llm.provider }}","config":{"model":"{{ .Values.llm.embedModel }}","ollama_base_url":"{{ .Values.llm.ollamaUrl }}"}}' \
+                > /dev/null
+              echo "[seed] done"
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi

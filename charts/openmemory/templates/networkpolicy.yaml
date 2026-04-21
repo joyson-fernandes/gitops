@@ -1,4 +1,4 @@
-# Ingress from Traefik to both user-facing services
+# Ingress: Traefik (public path) + same-namespace pods (seed job, health probes)
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
@@ -13,6 +13,8 @@ spec:
     - fromEndpoints:
         - matchLabels:
             io.kubernetes.pod.namespace: traefik
+        - matchLabels:
+            io.kubernetes.pod.namespace: {{ .Values.namespace }}
       toPorts:
         - ports:
             - port: "8765"
@@ -98,4 +100,16 @@ spec:
       toPorts:
         - ports:
             - port: {{ .Values.llm.ollamaPort | quote }}
+              protocol: TCP
+    # Same-namespace pods reaching the API (e.g. the PostSync LLM-config seed
+    # Job) or the UI. Matches both api and ui, the two tier=app services.
+    - toEndpoints:
+        - matchLabels:
+            app: openmemory
+            tier: app
+      toPorts:
+        - ports:
+            - port: "8765"
+              protocol: TCP
+            - port: "3000"
               protocol: TCP
