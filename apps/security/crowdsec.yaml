@@ -25,14 +25,21 @@ spec:
           metrics:
             serviceMonitor:
               enabled: true
-          acquisition:
-            - namespace: traefik
-              podName: traefik-*
-              program: traefik
-              # k8s /var/log/containers/*.log are symlinks; inotify pins to
-              # one inode and stops following after pod rotation. Polling
-              # re-stats the symlink target so rotation is handled.
+          # Using additionalAcquisition (raw block) instead of the chart's
+          # shorthand `acquisition` because the shorthand hardcodes labels.type=docker,
+          # which invokes crowdsecurity/docker-logs. K8s/containerd writes CRI-format
+          # lines (`<ts> <stream> <F|P> <msg>`), not Docker JSON, so docker-logs leaves
+          # evt.Parsed.message empty and downstream parsers (traefik-logs) never match.
+          # Setting type=containerd routes lines through crowdsecurity/cri-logs instead.
+          # poll_without_inotify keeps polling the symlink across pod rotations.
+          additionalAcquisition:
+            - source: file
+              filenames:
+                - /var/log/containers/traefik-*_traefik_*.log
               poll_without_inotify: true
+              labels:
+                type: containerd
+                program: traefik
           env:
             - name: COLLECTIONS
               value: "crowdsecurity/traefik crowdsecurity/http-cve crowdsecurity/base-http-scenarios"
