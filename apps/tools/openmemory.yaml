@@ -40,3 +40,6 @@ spec:
       jqPathExpressions:
         - .spec.volumeClaimTemplates[].status
         - .spec.volumeClaimTemplates[].metadata.creationTimestamp
+        - .spec.volumeClaimTemplates[].apiVersion
+        - .spec.volumeClaimTemplates[].kind
+        - .spec.volumeClaimTemplates[].spec.volumeMode
