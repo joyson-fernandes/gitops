@@ -42,6 +42,17 @@ spec:
         - name: api
           image: "{{ .Values.image.api.repository }}:{{ .Values.image.api.tag }}"
           imagePullPolicy: {{ .Values.image.api.pullPolicy }}
+          # Override the upstream single-worker CMD — mem0's LLM calls are
+          # synchronous and block the event loop, so a single worker causes
+          # readiness probes to fail under load. 2 workers + longer keep-alive
+          # gives room for concurrent MCP sessions.
+          command: ["uvicorn"]
+          args:
+            - "main:app"
+            - "--host=0.0.0.0"
+            - "--port=8765"
+            - "--workers=2"
+            - "--timeout-keep-alive=120"
           ports:
             - name: http
               containerPort: 8765
@@ -83,15 +94,13 @@ spec:
             httpGet:
               path: /docs
               port: http
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            failureThreshold: 6
-          livenessProbe:
-            httpGet:
-              path: /docs
-              port: http
-            initialDelaySeconds: 60
-            periodSeconds: 30
+            initialDelaySeconds: 15
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 12
+          # No livenessProbe — mem0's sync LLM calls can block the event loop
+          # for long enough that liveness would restart the pod mid-request.
+          # Rely on readiness + the gateway's own timeout semantics instead.
       volumes:
         - name: tmp
           emptyDir:
