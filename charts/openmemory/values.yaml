@@ -8,11 +8,13 @@ userId: joyson
 image:
   api:
     repository: registry.joysontech.com/library/openmemory-api
-    # Upstream commit cfb5f17 + our two patches:
+    # Upstream commit cfb5f17 + our three patches:
     #   pg1 — Postgres connect_args (SQLite-specific check_same_thread broke PG)
     #   pg2 — skip hardcoded-OpenAI categorization when OPENAI_API_KEY unset
+    #   pg3 — mem0 SDK API drift in mcp_server.py
+    #         (Qdrant.search limit→top_k, Memory.get_all user_id→filters)
     # See charts/openmemory/README.md for the rebuild recipe.
-    tag: "cfb5f17-pg2"
+    tag: "cfb5f17-pg3"
     pullPolicy: Always
   ui:
     repository: registry.joysontech.com/library/openmemory-ui
