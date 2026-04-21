@@ -29,6 +29,10 @@ spec:
             - namespace: traefik
               podName: traefik-*
               program: traefik
+              # k8s /var/log/containers/*.log are symlinks; inotify pins to
+              # one inode and stops following after pod rotation. Polling
+              # re-stats the symlink target so rotation is handled.
+              poll_without_inotify: true
           env:
             - name: COLLECTIONS
               value: "crowdsecurity/traefik crowdsecurity/http-cve crowdsecurity/base-http-scenarios"
