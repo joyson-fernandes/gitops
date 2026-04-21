@@ -1,0 +1,79 @@
+namespace: openmemory
+env: production
+
+# External user identifier — appears in the MCP SSE URL path
+# Final URL: https://openmemory-api.joysontech.com/mcp/<client>/sse/<userId>
+userId: joyson
+
+image:
+  api:
+    repository: registry.joysontech.com/library/openmemory-api
+    tag: "cfb5f17-pg1"        # pinned to mem0 upstream commit cfb5f17 + our postgres connect_args patch
+    pullPolicy: Always
+  ui:
+    repository: registry.joysontech.com/library/openmemory-ui
+    tag: "cfb5f17"
+    pullPolicy: Always
+  qdrant:
+    repository: qdrant/qdrant
+    tag: "v1.14.0"
+    pullPolicy: IfNotPresent
+
+replicas:
+  api: 1
+  ui: 1
+
+# LLM + embedder — all local via Ollama on Mac Studio
+llm:
+  provider: ollama
+  ollamaUrl: "http://10.0.1.120:11434"
+  chatModel: "gemma4:26b"
+  embedModel: "nomic-embed-text"
+  ollamaCidr: "10.0.1.120/32"
+  ollamaPort: "11434"
+
+# Shared CNPG prod-db in linkvolt namespace
+db:
+  host: "prod-db-rw.linkvolt.svc.cluster.local"
+  port: 5432
+  name: openmemory
+  user: openmemory
+  superuserName: postgres
+
+qdrant:
+  storageClass: ceph-block
+  size: 10Gi
+
+ingress:
+  uiHost: openmemory.joysontech.com
+  apiHost: openmemory-api.joysontech.com
+
+resources:
+  api:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  ui:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  qdrant:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+  bootstrap:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi

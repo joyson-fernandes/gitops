@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openmemory-ui
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: openmemory
+    tier: app
+    team: platform
+    env: {{ .Values.env }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  replicas: {{ .Values.replicas.ui }}
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: openmemory
+      tier: app
+      component: ui
+  template:
+    metadata:
+      labels:
+        app: openmemory
+        tier: app
+        team: platform
+        env: {{ .Values.env }}
+        component: ui
+    spec:
+      automountServiceAccountToken: false
+      imagePullSecrets:
+        - name: harbor-pull-secret
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: ui
+          image: "{{ .Values.image.ui.repository }}:{{ .Values.image.ui.tag }}"
+          imagePullPolicy: {{ .Values.image.ui.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 3000
+          securityContext:
+            allowPrivilegeEscalation: false
+            # UI entrypoint.sh does `sed -i` on .next/ files at startup to
+            # substitute NEXT_PUBLIC_* values, so the rootfs must be writable.
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop: ["ALL"]
+          env:
+            - name: NEXT_PUBLIC_API_URL
+              value: "https://{{ .Values.ingress.apiHost }}"
+            - name: NEXT_PUBLIC_USER_ID
+              value: {{ .Values.userId | quote }}
+          resources:
+            {{- toYaml .Values.resources.ui | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 30

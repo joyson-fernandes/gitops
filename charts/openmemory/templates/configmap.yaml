@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openmemory-env
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: openmemory
+    team: platform
+    env: {{ .Values.env }}
+data:
+  USER: {{ .Values.userId | quote }}
+  LLM_PROVIDER: {{ .Values.llm.provider | quote }}
+  LLM_MODEL: {{ .Values.llm.chatModel | quote }}
+  OLLAMA_BASE_URL: {{ .Values.llm.ollamaUrl | quote }}
+  EMBEDDER_PROVIDER: {{ .Values.llm.provider | quote }}
+  EMBEDDER_MODEL: {{ .Values.llm.embedModel | quote }}
+  QDRANT_HOST: "openmemory-qdrant"
+  QDRANT_PORT: "6333"
+  DB_HOST: {{ .Values.db.host | quote }}
+  DB_PORT: {{ .Values.db.port | quote }}
+  DB_NAME: {{ .Values.db.name | quote }}
+  DB_USER: {{ .Values.db.user | quote }}

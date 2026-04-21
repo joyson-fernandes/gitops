@@ -1,0 +1,95 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: openmemory-db-bootstrap
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: openmemory
+    tier: app
+    team: platform
+    env: {{ .Values.env }}
+  annotations:
+    # Run during the Sync phase at wave 1, after ExternalSecrets (wave 0)
+    # have created the openmemory-db Secret that holds the superuser password.
+    # Workloads (Deployments / StatefulSet) are in wave 2 so they see the
+    # database + role already provisioned.
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata:
+      labels:
+        app: openmemory
+        tier: app
+        team: platform
+        env: {{ .Values.env }}
+    spec:
+      restartPolicy: OnFailure
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 70
+        runAsGroup: 70
+        fsGroup: 70
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: psql
+          image: postgres:17-alpine
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          env:
+            - name: PGHOST
+              value: {{ .Values.db.host | quote }}
+            - name: PGPORT
+              value: {{ .Values.db.port | quote }}
+            - name: PGUSER
+              value: {{ .Values.db.superuserName | quote }}
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: openmemory-db
+                  key: superuser_password
+            - name: APP_DB
+              value: {{ .Values.db.name | quote }}
+            - name: APP_USER
+              value: {{ .Values.db.user | quote }}
+            - name: APP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: openmemory-db
+                  key: app_password
+          command: ["sh", "-c"]
+          args:
+            - |
+              set -eu
+              echo "[bootstrap] connecting to $PGHOST:$PGPORT as $PGUSER"
+              # 1) Create role if missing, then ensure password matches Vault
+              psql -v ON_ERROR_STOP=1 -d postgres <<SQL
+              DO \$\$
+              BEGIN
+                  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '${APP_USER}') THEN
+                      EXECUTE format('CREATE ROLE %I LOGIN PASSWORD %L', '${APP_USER}', '${APP_PASSWORD}');
+                  ELSE
+                      EXECUTE format('ALTER ROLE %I WITH LOGIN PASSWORD %L', '${APP_USER}', '${APP_PASSWORD}');
+                  END IF;
+              END
+              \$\$;
+              SQL
+              # 2) Create database if missing (CREATE DATABASE can't run in a DO block)
+              if ! psql -v ON_ERROR_STOP=1 -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname = '${APP_DB}'" | grep -q 1; then
+                psql -v ON_ERROR_STOP=1 -d postgres -c "CREATE DATABASE \"${APP_DB}\" OWNER \"${APP_USER}\""
+              fi
+              # 3) Ensure the app user can do what it needs on its DB
+              psql -v ON_ERROR_STOP=1 -d postgres -c "GRANT ALL PRIVILEGES ON DATABASE \"${APP_DB}\" TO \"${APP_USER}\""
+              psql -v ON_ERROR_STOP=1 -d "${APP_DB}" -c "GRANT ALL ON SCHEMA public TO \"${APP_USER}\""
+              echo "[bootstrap] done — db=${APP_DB} user=${APP_USER}"
+          resources:
+            {{- toYaml .Values.resources.bootstrap | nindent 12 }}

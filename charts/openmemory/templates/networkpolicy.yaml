@@ -1,0 +1,101 @@
+# Ingress from Traefik to both user-facing services
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: openmemory-ingress-traefik
+  namespace: {{ .Values.namespace }}
+spec:
+  endpointSelector:
+    matchLabels:
+      app: openmemory
+      tier: app
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: traefik
+      toPorts:
+        - ports:
+            - port: "8765"
+              protocol: TCP
+            - port: "3000"
+              protocol: TCP
+---
+# API → Qdrant (same namespace, both ports)
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: openmemory-api-to-qdrant
+  namespace: {{ .Values.namespace }}
+spec:
+  endpointSelector:
+    matchLabels:
+      app: openmemory
+      tier: db
+      component: qdrant
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app: openmemory
+            tier: app
+      toPorts:
+        - ports:
+            - port: "6333"
+              protocol: TCP
+            - port: "6334"
+              protocol: TCP
+---
+# Combined egress for all app-tier pods (api, ui, bootstrap-job)
+# Rules union, so each pod can use whichever subset it needs:
+#   api       → DNS + prod-db + Qdrant + Ollama
+#   ui        → DNS only (client browsers call the API directly via Traefik)
+#   bootstrap → DNS + prod-db
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: openmemory-egress
+  namespace: {{ .Values.namespace }}
+spec:
+  endpointSelector:
+    matchLabels:
+      app: openmemory
+      tier: app
+  egress:
+    # DNS resolution
+    - toEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: kube-system
+            k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+    # Prod DB in linkvolt namespace (CNPG cluster prod-db)
+    - toEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: linkvolt
+            cnpg.io/cluster: prod-db
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+    # Qdrant in our own namespace
+    - toEndpoints:
+        - matchLabels:
+            app: openmemory
+            tier: db
+            component: qdrant
+      toPorts:
+        - ports:
+            - port: "6333"
+              protocol: TCP
+            - port: "6334"
+              protocol: TCP
+    # Ollama on Mac Studio (out-of-cluster)
+    - toCIDR:
+        - {{ .Values.llm.ollamaCidr }}
+      toPorts:
+        - ports:
+            - port: {{ .Values.llm.ollamaPort | quote }}
+              protocol: TCP

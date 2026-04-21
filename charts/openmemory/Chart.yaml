@@ -1,0 +1,6 @@
+apiVersion: v2
+name: openmemory
+description: OpenMemory MCP — shared memory pool for Claude Code, Cursor, and local Ollama agents
+type: application
+version: 0.1.0
+appVersion: "cfb5f17"

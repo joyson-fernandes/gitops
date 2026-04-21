@@ -1,0 +1,34 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: openmemory-joysontech-com
+  namespace: {{ .Values.namespace }}
+spec:
+  secretName: openmemory-joysontech-com-tls
+  issuerRef:
+    name: local-ca-issuer
+    kind: ClusterIssuer
+  dnsNames:
+    - {{ .Values.ingress.uiHost }}
+  duration: 8760h
+  renewBefore: 720h
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: openmemory-ui
+  namespace: {{ .Values.namespace }}
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`{{ .Values.ingress.uiHost }}`)
+      middlewares:
+        - name: local-only
+          namespace: traefik
+      services:
+        - name: openmemory-ui
+          port: 3000
+  tls:
+    secretName: openmemory-joysontech-com-tls

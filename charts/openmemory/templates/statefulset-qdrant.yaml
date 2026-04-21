@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: openmemory-qdrant
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: openmemory
+    tier: db
+    team: platform
+    env: {{ .Values.env }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  serviceName: openmemory-qdrant
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openmemory
+      tier: db
+      component: qdrant
+  template:
+    metadata:
+      labels:
+        app: openmemory
+        tier: db
+        team: platform
+        env: {{ .Values.env }}
+        component: qdrant
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: qdrant
+          image: "{{ .Values.image.qdrant.repository }}:{{ .Values.image.qdrant.tag }}"
+          imagePullPolicy: {{ .Values.image.qdrant.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 6333
+            - name: grpc
+              containerPort: 6334
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop: ["ALL"]
+          env:
+            - name: QDRANT__SERVICE__HTTP_PORT
+              value: "6333"
+            - name: QDRANT__SERVICE__GRPC_PORT
+              value: "6334"
+          volumeMounts:
+            - name: data
+              mountPath: /qdrant/storage
+          resources:
+            {{- toYaml .Values.resources.qdrant | nindent 12 }}
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 30
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: {{ .Values.qdrant.storageClass }}
+        resources:
+          requests:
+            storage: {{ .Values.qdrant.size }}

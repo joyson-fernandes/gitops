@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: openmemory-ui
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: openmemory
+    tier: app
+    team: platform
+    env: {{ .Values.env }}
+    component: ui
+spec:
+  type: ClusterIP
+  selector:
+    app: openmemory
+    tier: app
+    component: ui
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http
+      protocol: TCP

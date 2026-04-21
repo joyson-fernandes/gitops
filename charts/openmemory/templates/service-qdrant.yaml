@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: openmemory-qdrant
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: openmemory
+    tier: db
+    team: platform
+    env: {{ .Values.env }}
+    component: qdrant
+spec:
+  type: ClusterIP
+  clusterIP: None   # headless — StatefulSet-managed DNS (openmemory-qdrant-0.openmemory-qdrant.openmemory.svc)
+  selector:
+    app: openmemory
+    tier: db
+    component: qdrant
+  ports:
+    - name: http
+      port: 6333
+      targetPort: http
+      protocol: TCP
+    - name: grpc
+      port: 6334
+      targetPort: grpc
+      protocol: TCP
