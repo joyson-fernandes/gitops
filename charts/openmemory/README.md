@@ -29,7 +29,12 @@ Synced into namespace `openmemory` by ExternalSecrets (`openmemory-db`, `openmem
 
 ## Rebuilding the images
 
-Upstream `mem0ai/mem0` publishes no container images and `api/app/database.py` ships a SQLite-specific `check_same_thread=False` connect_arg that breaks Postgres. Our image applies a one-line patch.
+Upstream `mem0ai/mem0` publishes no container images and ships two quirks that need patching:
+
+1. `api/app/database.py` passes SQLite-specific `check_same_thread=False` to SQLAlchemy unconditionally — breaks when `DATABASE_URL` is Postgres.
+2. `api/app/utils/categorization.py` always creates an `openai.OpenAI()` client and calls `api.openai.com/v1/chat/completions` on every memory insert, even when you've configured Ollama. With no `OPENAI_API_KEY`, every insert hangs for ~27s of retries and eventually errors — the memory still goes to Qdrant but not to Postgres.
+
+The `-pg2` image applies both patches.
 
 ```bash
 # Fetch a clean tree and pin an upstream SHA
@@ -38,22 +43,40 @@ git clone https://github.com/mem0ai/mem0.git && cd mem0
 SHA=$(git rev-parse --short HEAD)   # or checkout a specific release
 echo "building from $SHA"
 
-# Apply the Postgres connect_args patch
+# Apply both patches
 cd openmemory
 python3 - <<'PY'
+# Patch 1: Postgres connect_args
 p = 'api/app/database.py'
 data = open(p).read()
 new = data.replace(
     'engine = create_engine(\n    DATABASE_URL,\n    connect_args={"check_same_thread": False}  # Needed for SQLite\n)',
     'connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}\nengine = create_engine(\n    DATABASE_URL,\n    connect_args=connect_args,\n    pool_pre_ping=True\n)'
 )
-assert new != data, 'patch failed'
+assert new != data, 'patch 1 failed'
 open(p, 'w').write(new)
+
+# Patch 2: skip categorization when OPENAI_API_KEY unset
+p = 'api/app/utils/categorization.py'
+data = open(p).read()
+old = '''def get_categories_for_memory(memory: str) -> List[str]:
+    try:
+        messages = ['''
+new = '''def get_categories_for_memory(memory: str) -> List[str]:
+    # Skip categorization entirely when no usable OpenAI key is set. mem0 itself
+    # supports Ollama but this hardcoded openai_client always calls api.openai.com.
+    import os
+    if not os.environ.get("OPENAI_API_KEY"):
+        return []
+    try:
+        messages = ['''
+assert old in data, 'patch 2 failed'
+open(p, 'w').write(data.replace(old, new))
 PY
 
 # Build + push both images (amd64 for the K8s cluster)
 docker buildx build --platform=linux/amd64 \
-  -t registry.joysontech.com/library/openmemory-api:${SHA}-pg1 \
+  -t registry.joysontech.com/library/openmemory-api:${SHA}-pg2 \
   -f api/Dockerfile api/ --push
 
 docker buildx build --platform=linux/amd64 \
@@ -63,7 +86,7 @@ docker buildx build --platform=linux/amd64 \
 # Bump image.api.tag / image.ui.tag in values.yaml, commit, ArgoCD syncs.
 ```
 
-The `-pg1` suffix on the API tag marks the patched variant. Bump to `-pg2` etc. if the patch itself ever changes.
+The `-pgN` suffix on the API tag tracks our patch revision; bump `N` if the patch set changes (keep both patches in a single suffix).
 
 ## Initial Postgres role + database
 

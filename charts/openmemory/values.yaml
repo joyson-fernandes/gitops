@@ -8,7 +8,11 @@ userId: joyson
 image:
   api:
     repository: registry.joysontech.com/library/openmemory-api
-    tag: "cfb5f17-pg1"        # pinned to mem0 upstream commit cfb5f17 + our postgres connect_args patch
+    # Upstream commit cfb5f17 + our two patches:
+    #   pg1 — Postgres connect_args (SQLite-specific check_same_thread broke PG)
+    #   pg2 — skip hardcoded-OpenAI categorization when OPENAI_API_KEY unset
+    # See charts/openmemory/README.md for the rebuild recipe.
+    tag: "cfb5f17-pg2"
     pullPolicy: Always
   ui:
     repository: registry.joysontech.com/library/openmemory-ui
