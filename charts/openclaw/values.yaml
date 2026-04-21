@@ -15,6 +15,10 @@ gateway:
 llm:
   provider: ollama
   baseUrl: "http://10.0.1.120:11434"
+  model: "gemma4:26b"
+  modelName: "Gemma 4 26B"
+  contextWindow: 32768
+  maxTokens: 8192
 
 resources:
   requests:

@@ -26,14 +26,14 @@ data:
       "agents": {
         "defaults": {
           "workspace": "~/.openclaw/workspace",
-          "model": "ollama/qwen3.5:27b"
+          "model": "ollama/{{ .Values.llm.model }}"
         },
         "list": [
           {
             "id": "default",
             "name": "OpenClaw Assistant",
             "workspace": "~/.openclaw/workspace",
-            "model": "ollama/qwen3.5:27b"
+            "model": "ollama/{{ .Values.llm.model }}"
           }
         ]
       },
@@ -45,13 +45,13 @@ data:
             "api": "ollama",
             "models": [
               {
-                "id": "qwen3.5:27b",
-                "name": "Qwen 3.5 27B",
+                "id": "{{ .Values.llm.model }}",
+                "name": "{{ .Values.llm.modelName }}",
                 "api": "ollama",
                 "reasoning": false,
                 "input": ["text"],
-                "contextWindow": 32768,
-                "maxTokens": 8192
+                "contextWindow": {{ .Values.llm.contextWindow }},
+                "maxTokens": {{ .Values.llm.maxTokens }}
               }
             ]
           }
