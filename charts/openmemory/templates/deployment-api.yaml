@@ -42,16 +42,17 @@ spec:
         - name: api
           image: "{{ .Values.image.api.repository }}:{{ .Values.image.api.tag }}"
           imagePullPolicy: {{ .Values.image.api.pullPolicy }}
-          # Override the upstream single-worker CMD — mem0's LLM calls are
-          # synchronous and block the event loop, so a single worker causes
-          # readiness probes to fail under load. 2 workers + longer keep-alive
-          # gives room for concurrent MCP sessions.
+          # Single worker is mandatory: mem0's MCP SSE transport keeps session
+          # state in-process, so with --workers > 1 the SSE connection lands on
+          # one worker and the subsequent /mcp/messages POST may hit the other,
+          # breaking every tool call. Tradeoff: a slow LLM call will block all
+          # other requests; mitigated by the long keep-alive.
           command: ["uvicorn"]
           args:
             - "main:app"
             - "--host=0.0.0.0"
             - "--port=8765"
-            - "--workers=2"
+            - "--workers=1"
             - "--timeout-keep-alive=120"
           ports:
             - name: http
