@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://charts.bitnami.com/bitnami
     chart: redis
-    targetRevision: "25.3.11"
+    targetRevision: "25.3.12"
     helm:
       valuesObject:
         commonLabels:
