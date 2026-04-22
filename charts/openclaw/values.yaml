@@ -32,7 +32,9 @@ resources:
     memory: 2Gi
 
 persistence:
-  storageClass: ceph-block
+  # Moved off ceph-block due to slow OSDs (HEALTH_WARN, 10s+ write stalls).
+  # local-path keeps chat state snappy; pod is pinned to a single node.
+  storageClass: local-path
   size: 5Gi
 
 egress:
