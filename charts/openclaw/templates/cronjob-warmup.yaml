@@ -1,0 +1,42 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: openclaw-ollama-warmup
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: openclaw
+    team: platform
+    env: {{ .Values.env }}
+spec:
+  schedule: "*/25 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        metadata:
+          labels:
+            app: openclaw
+            component: warmup
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: warmup
+              image: curlimages/curl:8.11.0
+              command: ["sh", "-c"]
+              args:
+                - |
+                  curl -sS --max-time 60 \
+                    -H 'Content-Type: application/json' \
+                    -d '{"model":"{{ .Values.llm.model }}","prompt":"ping","stream":false,"keep_alive":"{{ .Values.llm.keepAlive }}","options":{"num_predict":1}}' \
+                    {{ .Values.llm.baseUrl }}/api/generate > /dev/null
+                  echo "warmup ok"
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 16Mi
+                limits:
+                  cpu: 50m
+                  memory: 32Mi
