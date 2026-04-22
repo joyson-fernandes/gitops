@@ -17,6 +17,7 @@ data:
         "auth": {
           "mode": "token"
         },
+        "trustedProxies": {{ .Values.gateway.trustedProxies | toJson }},
         "controlUi": {
           "enabled": true,
           "allowedOrigins": ["https://openclaw.joysontech.com"],
