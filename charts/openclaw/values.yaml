@@ -6,7 +6,7 @@ image:
   tag: "v2026.3.7"
   pullPolicy: Always
 
-replicas: 1
+replicas: 0  # migrating to standalone VM 2026-04-22; flip back to 1 to restore
 
 gateway:
   port: 18789
