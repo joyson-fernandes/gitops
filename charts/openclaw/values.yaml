@@ -19,8 +19,6 @@ llm:
   modelName: "Gemma 4 26B"
   contextWindow: 32768
   maxTokens: 8192
-  # keep the model hot in Ollama VRAM to avoid 8s cold-load on every new chat
-  keepAlive: "30m"
 
 resources:
   requests:
