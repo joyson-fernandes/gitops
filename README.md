@@ -12,9 +12,7 @@ apps/
   storage/                   # Rook-Ceph operator + cluster, Velero MinIO
   platform/                  # IDP UI, Portfolio, Authentik SSO, Kyverno
   security/                  # Vault, Traefik
-  tools/                     # Harbor, OpenClaw
-charts/
-  openclaw/                  # OpenClaw Helm chart (standalone, not part of any app repo)
+  tools/                     # Harbor
 ```
 
 ## Adding a new app
