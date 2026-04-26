@@ -134,6 +134,10 @@ spec:
           prometheusSpec:
             replicas: 2
             podAntiAffinity: soft
+            # Unlock experimental PromQL functions (sort_by_label, etc.)
+            # used by some Grafana dashboards (saas-ideas-top, gh-hype, ...).
+            enableFeatures:
+              - promql-experimental-functions
             resources:
               requests:
                 cpu: 200m
