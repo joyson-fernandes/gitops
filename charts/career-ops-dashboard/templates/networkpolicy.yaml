@@ -9,11 +9,11 @@ spec:
     matchLabels: {{- include "career-ops-dashboard.selectorLabels" . | nindent 6 }}
   policyTypes: [Ingress, Egress]
   ingress:
-    # Traefik ingress + Prometheus scrape from monitoring ns.
+    # Traefik ingress (traefik ns) + Prometheus scrape (monitoring ns).
     - from:
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: kube-system
+              kubernetes.io/metadata.name: traefik
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: monitoring
