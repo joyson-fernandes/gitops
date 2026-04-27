@@ -15,7 +15,7 @@ service:
 # https://github.com/kubernetes/git-sync
 gitSync:
   enabled: true
-  image: registry.k8s.io/git-sync/git-sync:v4.4.2
+  image: registry.k8s.io/git-sync/git-sync:v4.6.0
   repo: git@github.com:joyson-fernandes/career-ops-data.git
   branch: main
   period: 30s
