@@ -72,9 +72,13 @@ spec:
           env:
             - name: GITSYNC_SSH_KEY_FILE
               value: /etc/git-secret/ssh-key
+            - name: HOME
+              value: /tmp
           volumeMounts:
             - name: data
               mountPath: /data
+            - name: tmp
+              mountPath: /tmp
             - name: git-sync-secret
               mountPath: /etc/git-secret
               readOnly: true
