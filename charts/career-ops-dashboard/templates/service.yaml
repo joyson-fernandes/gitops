@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "career-ops-dashboard.fullname" . }}
+  labels: {{- include "career-ops-dashboard.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: http
+  selector: {{- include "career-ops-dashboard.selectorLabels" . | nindent 4 }}

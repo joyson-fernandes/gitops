@@ -1,0 +1,11 @@
+{{- if .Values.basicAuth.enabled }}
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: career-ops-basicauth
+  labels: {{- include "career-ops-dashboard.labels" . | nindent 4 }}
+spec:
+  basicAuth:
+    secret: {{ .Values.basicAuth.secretName }}
+    realm: career-ops
+{{- end }}

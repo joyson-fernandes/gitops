@@ -1,0 +1,75 @@
+image:
+  repository: registry.joysontech.com/library/career-ops-dashboard
+  tag: latest
+  pullPolicy: IfNotPresent
+
+imagePullSecrets:
+  - name: harbor-pull-secret
+
+replicaCount: 1
+
+service:
+  port: 8080
+
+# git-sync sidecar pulls the private data repo into a shared emptyDir.
+# https://github.com/kubernetes/git-sync
+gitSync:
+  enabled: true
+  image: registry.k8s.io/git-sync/git-sync:v4.4.2
+  repo: git@github.com:joyson-fernandes/career-ops-data.git
+  branch: main
+  period: 30s
+  # Reads ssh-key + known-hosts from secret/career-ops/git-sync via ExternalSecret.
+  secretName: career-ops-git-sync
+
+ingress:
+  enabled: true
+  host: careerops.joysontech.com
+  certIssuer: local-ca-issuer
+  middlewares:
+    # Order matters: local-only first (network filter), then basic-auth.
+    - name: traefik-localonly
+      namespace: kube-system
+    - name: career-ops-basicauth
+      namespace: career-ops
+
+basicAuth:
+  enabled: true
+  # ExternalSecret pulls htpasswd-format `users` field from secret/career-ops/basic-auth.
+  secretName: career-ops-basic-auth
+
+externalSecrets:
+  enabled: true
+  storeRef:
+    name: vault-backend
+    kind: ClusterSecretStore
+  refreshInterval: 1h
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+serviceMonitor:
+  enabled: true
+  interval: 30s
+
+networkPolicy:
+  enabled: true
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  fsGroup: 65532
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: [ALL]
