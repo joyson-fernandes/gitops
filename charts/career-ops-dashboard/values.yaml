@@ -28,8 +28,8 @@ ingress:
   certIssuer: local-ca-issuer
   middlewares:
     # Order matters: local-only first (network filter), then basic-auth.
-    - name: traefik-localonly
-      namespace: kube-system
+    - name: local-only
+      namespace: traefik
     - name: career-ops-basicauth
       namespace: career-ops
 
