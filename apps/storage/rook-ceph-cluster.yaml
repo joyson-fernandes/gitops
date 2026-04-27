@@ -51,11 +51,11 @@ spec:
           resources:
             mon:
               requests:
-                cpu: 100m
-                memory: 256Mi
+                cpu: 200m
+                memory: 1Gi
               limits:
-                cpu: 500m
-                memory: 512Mi
+                cpu: "1"
+                memory: 2Gi
             mgr:
               requests:
                 cpu: 100m
