@@ -41,7 +41,7 @@ basicAuth:
 externalSecrets:
   enabled: true
   storeRef:
-    name: vault-backend
+    name: vault
     kind: ClusterSecretStore
   refreshInterval: 1h
 
