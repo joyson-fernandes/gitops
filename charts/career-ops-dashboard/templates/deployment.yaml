@@ -11,7 +11,7 @@ spec:
     matchLabels: {{- include "career-ops-dashboard.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      labels: {{- include "career-ops-dashboard.selectorLabels" . | nindent 8 }}
+      labels: {{- include "career-ops-dashboard.labels" . | nindent 8 }}
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/path: /metrics
