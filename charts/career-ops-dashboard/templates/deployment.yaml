@@ -32,6 +32,41 @@ spec:
             secretName: {{ .Values.gitSync.secretName }}
             defaultMode: 0400
         {{- end }}
+      {{- if .Values.gitSync.enabled }}
+      initContainers:
+        - name: git-sync-init
+          image: {{ .Values.gitSync.image }}
+          args:
+            - --repo={{ .Values.gitSync.repo }}
+            - --ref={{ .Values.gitSync.branch }}
+            - --root=/data
+            - --link=current
+            - --one-time
+            - --ssh-known-hosts-file=/etc/git-secret/known-hosts
+            - --max-failures=3
+          env:
+            - name: GITSYNC_SSH_KEY_FILE
+              value: /etc/git-secret/ssh-key
+            - name: HOME
+              value: /tmp
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: tmp
+              mountPath: /tmp
+            - name: git-sync-secret
+              mountPath: /etc/git-secret
+              readOnly: true
+          resources:
+            limits: { cpu: 200m, memory: 128Mi }
+            requests: { cpu: 50m, memory: 32Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 65533
+            capabilities: { drop: [ALL] }
+      {{- end }}
       containers:
         - name: server
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
