@@ -1,6 +1,6 @@
 image:
   repository: registry.joysontech.com/library/career-ops-dashboard
-  tag: latest
+  tag: "7a1cf80"
   pullPolicy: IfNotPresent
 
 imagePullSecrets:

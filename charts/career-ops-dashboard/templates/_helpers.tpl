@@ -12,6 +12,9 @@
 {{- end -}}
 
 {{- define "career-ops-dashboard.labels" -}}
+app: {{ include "career-ops-dashboard.name" . }}
+team: joyson
+env: prod
 app.kubernetes.io/name: {{ include "career-ops-dashboard.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
