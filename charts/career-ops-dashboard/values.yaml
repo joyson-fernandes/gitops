@@ -16,7 +16,7 @@ service:
 gitSync:
   enabled: true
   image: registry.k8s.io/git-sync/git-sync:v4.6.0
-  repo: git@github.com:joyson-fernandes/career-ops-data.git
+  repo: ssh://git@ssh.github.com:443/joyson-fernandes/career-ops-data.git
   branch: main
   period: 30s
   # Reads ssh-key + known-hosts from secret/career-ops/git-sync via ExternalSecret.
