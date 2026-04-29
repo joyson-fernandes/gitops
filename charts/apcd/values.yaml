@@ -9,7 +9,7 @@ image:
 port: 8080
 
 # LAN-only LoadBalancer — phone talks straight to this IP
-loadBalancerIP: 10.0.1.65
+loadBalancerIP: 10.0.1.70
 
 host: apcd.joysontech.com
 
