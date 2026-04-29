@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: apcd
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: apcd
+    team: platform
+    env: {{ .Values.env }}
+spec:
+  type: ClusterIP
+  selector:
+    app: apcd
+  ports:
+    - name: http
+      port: {{ .Values.port }}
+      targetPort: http

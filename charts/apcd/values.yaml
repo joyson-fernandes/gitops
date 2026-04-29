@@ -1,0 +1,19 @@
+namespace: apcd
+env: production
+
+image:
+  repository: registry.joysontech.com/library/apcd
+  tag: "0.1.0"
+  pullPolicy: Always
+
+port: 8080
+
+host: apcd.joysontech.com
+
+resources:
+  requests:
+    cpu: 25m
+    memory: 32Mi
+  limits:
+    cpu: 250m
+    memory: 128Mi
