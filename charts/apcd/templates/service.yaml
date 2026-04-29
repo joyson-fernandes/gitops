@@ -7,8 +7,11 @@ metadata:
     app: apcd
     team: platform
     env: {{ .Values.env }}
+  annotations:
+    metallb.io/loadBalancerIPs: {{ .Values.loadBalancerIP | quote }}
 spec:
-  type: ClusterIP
+  type: LoadBalancer
+  loadBalancerIP: {{ .Values.loadBalancerIP }}
   selector:
     app: apcd
   ports:
