@@ -1,0 +1,34 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: outpost
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  labels:
+    app.kubernetes.io/part-of: outpost
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/joyson-fernandes/outpost.git
+    targetRevision: main
+    path: deploy/chart
+    helm:
+      releaseName: outpost
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: outpost
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  ignoreDifferences:
+    - group: external-secrets.io
+      kind: ExternalSecret
+      jsonPointers:
+        - /spec/data
+        - /spec/dataFrom
+        - /spec/target
