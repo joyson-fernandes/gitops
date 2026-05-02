@@ -22,7 +22,14 @@ spec:
             enabled: true
             namespace: "*"
         admissionController:
-          replicas: 1
+          replicas: 2
+          topologySpreadConstraints:
+            - maxSkew: 1
+              topologyKey: kubernetes.io/hostname
+              whenUnsatisfiable: DoNotSchedule
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: kyverno-admission-controller
           resources:
             requests:
               cpu: 100m
@@ -31,6 +38,14 @@ spec:
               cpu: 500m
               memory: 512Mi
         backgroundController:
+          replicas: 2
+          topologySpreadConstraints:
+            - maxSkew: 1
+              topologyKey: kubernetes.io/hostname
+              whenUnsatisfiable: DoNotSchedule
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: kyverno-background-controller
           resources:
             requests:
               cpu: 50m
@@ -39,6 +54,14 @@ spec:
               cpu: 200m
               memory: 256Mi
         cleanupController:
+          replicas: 2
+          topologySpreadConstraints:
+            - maxSkew: 1
+              topologyKey: kubernetes.io/hostname
+              whenUnsatisfiable: DoNotSchedule
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: kyverno-cleanup-controller
           resources:
             requests:
               cpu: 50m
@@ -47,6 +70,14 @@ spec:
               cpu: 100m
               memory: 128Mi
         reportsController:
+          replicas: 2
+          topologySpreadConstraints:
+            - maxSkew: 1
+              topologyKey: kubernetes.io/hostname
+              whenUnsatisfiable: DoNotSchedule
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: kyverno-reports-controller
           resources:
             requests:
               cpu: 50m
