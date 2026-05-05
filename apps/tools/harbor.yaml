@@ -34,3 +34,10 @@ spec:
       kind: Deployment
       jsonPointers:
         - /spec/template/metadata/annotations
+    # Live patch on harbor-nginx ConfigMap adds client_body_timeout 900s + send_timeout 900s
+    # to the /v2/ location block (chart hardcodes nginx.conf with 60s default which kills
+    # large-blob pushes mid-upload). See `kubectl get cm harbor-nginx -n harbor`.
+    - kind: ConfigMap
+      name: harbor-nginx
+      jsonPointers:
+        - /data
