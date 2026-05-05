@@ -2,7 +2,10 @@ apiVersion: kyverno.io/v2
 kind: PolicyException
 metadata:
   name: langfuse-exceptions
-  namespace: {{ .Values.namespace }}
+  # PolicyException lives in the kyverno namespace so it's evaluated even
+  # while the langfuse namespace is being created on first sync. The match
+  # block below scopes it to the langfuse namespace.
+  namespace: kyverno
   annotations:
     argocd.argoproj.io/sync-wave: "-10"
 spec:
