@@ -97,7 +97,7 @@ langfuse:
       existingSecret: langfuse-redis
       existingSecretPasswordKey: password
     architecture: standalone
-    master:
+    primary:
       persistence:
         enabled: true
         size: 4Gi
