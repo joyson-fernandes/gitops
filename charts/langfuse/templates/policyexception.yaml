@@ -1,0 +1,23 @@
+apiVersion: kyverno.io/v2
+kind: PolicyException
+metadata:
+  name: langfuse-exceptions
+  namespace: {{ .Values.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+spec:
+  exceptions:
+    - policyName: require-labels
+      ruleNames:
+        - require-app-team-env-labels
+        - autogen-require-app-team-env-labels
+    - policyName: restrict-registry
+      ruleNames:
+        - restrict-to-harbor
+        - autogen-restrict-to-harbor
+        - autogen-cronjob-restrict-to-harbor
+  match:
+    any:
+      - resources:
+          namespaces:
+            - {{ .Values.namespace }}
