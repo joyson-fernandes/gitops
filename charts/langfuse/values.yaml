@@ -1,0 +1,106 @@
+namespace: langfuse
+env: production
+
+ingress:
+  host: langfuse.joysontech.com
+  certIssuer: local-ca-issuer
+
+# Values for the upstream langfuse subchart
+langfuse:
+  langfuse:
+    web:
+      replicas: 1
+      resources:
+        requests: { cpu: 200m, memory: 512Mi }
+        limits:   { cpu: "1",   memory: 2Gi }
+    worker:
+      replicas: 1
+      resources:
+        requests: { cpu: 200m, memory: 512Mi }
+        limits:   { cpu: "1",   memory: 2Gi }
+    # Critical secrets are injected via valueFrom -> existing K8s Secret
+    # produced by the langfuse-secrets ExternalSecret in this chart.
+    salt:
+      secretKeyRef:
+        name: langfuse-config
+        key: salt
+    nextauth:
+      url: https://langfuse.joysontech.com
+      secret:
+        secretKeyRef:
+          name: langfuse-config
+          key: nextauth_secret
+    encryptionKey:
+      secretKeyRef:
+        name: langfuse-config
+        key: encryption_key
+    features:
+      telemetryEnabled: false
+      experimental: true
+      signupEnabled: true  # disable after bootstrapping the first admin
+
+  postgresql:
+    deploy: true
+    auth:
+      existingSecret: langfuse-postgres
+      secretKeys:
+        adminPasswordKey: postgres-password
+        userPasswordKey: password
+      username: langfuse
+      database: langfuse
+    primary:
+      persistence:
+        enabled: true
+        size: 20Gi
+        storageClass: ceph-block
+      resources:
+        requests: { cpu: 100m, memory: 256Mi }
+        limits:   { cpu: "1",   memory: 1Gi }
+
+  clickhouse:
+    deploy: true
+    auth:
+      existingSecret: langfuse-clickhouse
+      existingSecretKey: password
+    shards: 1
+    replicaCount: 1
+    persistence:
+      size: 20Gi
+      storageClass: ceph-block
+    resources:
+      requests: { cpu: 200m, memory: 1Gi }
+      limits:   { cpu: "2",   memory: 4Gi }
+    zookeeper:
+      enabled: false  # single-replica setup doesn't need zookeeper
+
+  redis:
+    deploy: true
+    auth:
+      existingSecret: langfuse-redis
+      existingSecretPasswordKey: password
+    architecture: standalone
+    master:
+      persistence:
+        enabled: true
+        size: 4Gi
+        storageClass: ceph-block
+      resources:
+        requests: { cpu: 100m, memory: 128Mi }
+        limits:   { cpu: 500m, memory: 512Mi }
+
+  s3:
+    deploy: true
+    bucket: langfuse
+    region: auto
+    auth:
+      existingSecret: langfuse-s3
+      rootUserSecretKey: access_key_id
+      rootPasswordSecretKey: secret_access_key
+    persistence:
+      size: 50Gi
+      storageClass: ceph-block
+
+  # Disable the chart's built-in ingress — we ship our own Traefik
+  # IngressRoute with the local-ca cert.
+  ingress:
+    enabled: false

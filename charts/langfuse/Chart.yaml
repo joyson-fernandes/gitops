@@ -1,0 +1,11 @@
+apiVersion: v2
+name: langfuse
+description: Langfuse v3 — LLM observability platform (shared homelab service)
+type: application
+version: 0.1.0
+appVersion: "3.122.0"
+
+dependencies:
+  - name: langfuse
+    version: "1.5.0"
+    repository: "oci://ghcr.io/langfuse/langfuse-k8s/charts"
