@@ -13,6 +13,19 @@ spec:
     targetRevision: "82.18.0"
     helm:
       valuesObject:
+        # Silence built-in alerts that are noise on this cluster:
+        # - Watchdog/InfoInhibitor: heartbeat + cascade-inhibit synthetic alerts.
+        #   Fire by design and shouldn't appear in user-facing alert lists.
+        # - CPUThrottlingHigh: known false-positive on modern kernels for
+        #   short-burst sidecars (node-exporter, mgr watch-active, etc).
+        #   Out of 16 firings, 14 were sidecars where CFS throttle does not
+        #   indicate real CPU pressure. Bump per-workload limits selectively
+        #   instead of having a permanent firing alert.
+        defaultRules:
+          disabled:
+            Watchdog: true
+            InfoInhibitor: true
+            CPUThrottlingHigh: true
         crds:
           enabled: false
         alertmanager:
