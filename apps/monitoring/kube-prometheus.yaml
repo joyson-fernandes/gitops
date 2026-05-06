@@ -157,6 +157,20 @@ spec:
                           {{ end }}{{ if .Labels.pod }}pod: {{ .Labels.pod }}
                           {{ end }}{{ if .Labels.namespace }}ns: {{ .Labels.namespace }}
                           {{ end }}{{ end }}` }}
+                # New: webhook to the homelab-triage-agent. Receives the same
+                # AM-formatted payload Grafana uses for any "webhook" type
+                # contact point. Agent's /v1/alertmanager parses it and runs
+                # one triage per firing alert. Investigation-only — agent
+                # doesn't act, just records on the dashboard for context.
+                - orgId: 1
+                  name: triage-agent
+                  receivers:
+                    - uid: triage-agent
+                      type: webhook
+                      disableResolveMessage: false
+                      settings:
+                        url: http://homelab-triage-agent.agents.svc.cluster.local/v1/alertmanager
+                        httpMethod: POST
             policies.yaml:
               apiVersion: 1
               policies:
@@ -167,7 +181,14 @@ spec:
                   group_interval: 1m
                   repeat_interval: 4h
                   routes:
+                    # Discord notification for warning/critical (existing).
                     - receiver: discord-alerts
+                      object_matchers:
+                        - [severity, =~, warning|critical]
+                      continue: true   # don't stop — also send to triage agent
+                    # Triage agent investigates the same alerts. `continue: true`
+                    # above means this route is also evaluated.
+                    - receiver: triage-agent
                       object_matchers:
                         - [severity, =~, warning|critical]
                       continue: false
