@@ -158,6 +158,22 @@ spec:
                       object_matchers:
                         - [severity, =~, warning|critical]
                       continue: false
+        # This cluster uses Cilium's kube-proxy replacement — no kube-proxy
+        # DaemonSet exists, so the default scrape would forever flag KubeProxyDown.
+        kubeProxy:
+          enabled: false
+        # Control-plane components on this kubeadm cluster bind their metrics
+        # ports to 127.0.0.1 only. Static-pod manifests have been edited on
+        # m01/m02/m03 to bind 0.0.0.0, but kubelet is not picking up the
+        # manifest change (containers recreate with old args — open
+        # investigation). Disable the scrapes until that's fixed so the
+        # ServiceMonitors don't permanently fire TargetDown.
+        kubeControllerManager:
+          enabled: false
+        kubeScheduler:
+          enabled: false
+        kubeEtcd:
+          enabled: false
         prometheusOperator:
           resources:
             requests:
