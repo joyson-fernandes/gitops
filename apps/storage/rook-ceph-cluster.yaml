@@ -98,6 +98,15 @@ spec:
               - name: joy-k8s-w05
                 devices:
                   - name: sdb
+              - name: joy-k8s-w06
+                devices:
+                  - name: sdb
+              - name: joy-k8s-w07
+                devices:
+                  - name: sdb
+              - name: joy-k8s-w08
+                devices:
+                  - name: sdb
         cephBlockPools:
           - name: ceph-blockpool
             spec:
