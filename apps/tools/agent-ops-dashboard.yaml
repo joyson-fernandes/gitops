@@ -23,10 +23,12 @@ spec:
     syncOptions:
       - CreateNamespace=false
       - ServerSideApply=true
+      # ServerSideDiff uses kube-apiserver dry-run for diffing, which respects
+      # CRD defaults — so external-secrets-defaulted fields no longer show as drift.
+      - ServerSideDiff=true
   ignoreDifferences:
-    # ignore everything the external-secrets controller writes back
-    # (finalizer + CRD-defaulted spec fields like conversionStrategy/decodingStrategy/metadataPolicy)
+    # external-secrets controller adds its cleanup finalizer at runtime
     - group: external-secrets.io
       kind: ExternalSecret
-      managedFieldsManagers:
-        - external-secrets
+      jsonPointers:
+        - /metadata/finalizers
