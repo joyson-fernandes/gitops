@@ -24,8 +24,9 @@ spec:
       - CreateNamespace=false   # namespace.yaml is in deploy/, manages PSS labels
       - ServerSideApply=true
   ignoreDifferences:
-    # external-secrets controller adds its cleanup finalizer at runtime
+    # ignore everything the external-secrets controller writes back
+    # (finalizer + CRD-defaulted spec fields like conversionStrategy/decodingStrategy/metadataPolicy)
     - group: external-secrets.io
       kind: ExternalSecret
-      jsonPointers:
-        - /metadata/finalizers
+      managedFieldsManagers:
+        - external-secrets
