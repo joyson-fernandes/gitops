@@ -1,0 +1,72 @@
+# Periodic crictl image prune on every worker.
+#
+# Containerd's image cache grew to 54 GB on w01 and 58 GB on w05 over weeks
+# of pod churn (Cilium upgrades, OSD expansion, worker resizes), pushing
+# their root disks past the Ceph mon "low space" warning before kubelet's
+# default GC threshold (85%) ever kicked in. This sweeper does a `crictl
+# rmi --prune` daily so unused images don't accumulate to that scale.
+#
+# Why a DaemonSet (not a CronJob): CronJobs run on a single node per fire,
+# and we need the prune to happen on every worker. The simplest pattern is
+# a DaemonSet whose container sleeps between prunes.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-image-prune
+  namespace: kube-system
+  labels:
+    app: node-image-prune
+spec:
+  selector:
+    matchLabels:
+      app: node-image-prune
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app: node-image-prune
+    spec:
+      hostPID: true
+      # Skip control-plane nodes — image cache there is small and stable.
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+      tolerations:
+        - operator: Exists
+      containers:
+        - name: prune
+          image: busybox:1.36
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              # Sleep a small jittered offset (0-300s) so all workers don't
+              # fire at the same instant after a rollout.
+              JITTER=$((RANDOM % 300))
+              echo "[startup] sleeping ${JITTER}s of jitter"
+              sleep "${JITTER}"
+              while true; do
+                echo "[$(date -Iseconds)] running crictl rmi --prune"
+                nsenter -t 1 -m -u -n -i crictl --timeout=60s rmi --prune 2>&1 | tail -5 || \
+                  echo "[$(date -Iseconds)] prune returned non-zero (timeouts on slow IO are expected; prune still progresses)"
+                df -h / | tail -1
+                # 24h between prunes
+                sleep 86400
+              done
+          securityContext:
+            privileged: true
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 500m
+              memory: 128Mi
