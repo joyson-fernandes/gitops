@@ -23,3 +23,9 @@ spec:
     syncOptions:
       - CreateNamespace=false   # namespace.yaml is in deploy/, manages PSS labels
       - ServerSideApply=true
+  ignoreDifferences:
+    # external-secrets controller adds its cleanup finalizer at runtime
+    - group: external-secrets.io
+      kind: ExternalSecret
+      jsonPointers:
+        - /metadata/finalizers
