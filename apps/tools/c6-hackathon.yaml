@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: c6-hackathon
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  labels:
+    app.kubernetes.io/part-of: c6-hackathon
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/joyson-fernandes/C6_Hackathon-Group-4.git
+    targetRevision: main
+    path: deploy/chart
+    helm:
+      releaseName: c6-hackathon
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: c6-hackathon
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  ignoreDifferences:
+    - group: external-secrets.io
+      kind: ExternalSecret
+      jsonPointers:
+        - /spec/data
+        - /spec/dataFrom
