@@ -42,6 +42,14 @@
       ],
       "matchUpdateTypes": ["major"],
       "enabled": false
+    },
+    {
+      "description": "Gateway API CRDs are hand-curated — see charts/gateway-api-crds/README.md. Bump only when Cilium GA includes cilium#45825.",
+      "matchFileNames": [
+        "charts/gateway-api-crds/**",
+        "apps/platform/gateway-api-crds.yaml"
+      ],
+      "enabled": false
     }
   ]
 }

@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gateway-api-crds
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    # Sync ahead of any chart that consumes Gateway API CRDs (cilium, traefik, etc.)
+    argocd.argoproj.io/sync-wave: "-100"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/joyson-fernandes/gitops.git
+    targetRevision: main
+    path: charts/gateway-api-crds
+    directory:
+      recurse: false
+      include: "standard-install-*.yaml"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: false   # never auto-prune CRDs — manual curation only
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true

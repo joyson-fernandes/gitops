@@ -12,6 +12,12 @@ spec:
       chart: traefik
       targetRevision: "40.0.0"
       helm:
+        # Gateway API CRDs are managed by the dedicated `gateway-api-crds`
+        # ArgoCD Application (charts/gateway-api-crds/). Skipping CRDs here
+        # prevents Traefik from re-pushing v1.5.1 standard-install on every
+        # sync, which un-serves TLSRoute v1alpha2 and crashes cilium-operator.
+        # See: charts/gateway-api-crds/README.md
+        skipCrds: true
         valuesObject:
           deployment:
             replicas: 3
