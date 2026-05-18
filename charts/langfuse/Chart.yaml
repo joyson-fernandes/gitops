@@ -7,5 +7,5 @@ appVersion: "3.122.0"
 
 dependencies:
   - name: langfuse
-    version: "1.5.30"
+    version: "1.5.31"
     repository: "oci://ghcr.io/langfuse/langfuse-k8s/charts"
