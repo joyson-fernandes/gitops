@@ -20,7 +20,7 @@ web:
 cron:
   image:
     repository: phpipam/phpipam-cron
-    tag: "v1.8.0"
+    tag: "v1.8.1"
     pullPolicy: IfNotPresent
   scanInterval: "1h"
   resources:
