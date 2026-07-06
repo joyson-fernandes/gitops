@@ -10,7 +10,7 @@ spec:
   sources:
     - repoURL: https://traefik.github.io/charts
       chart: traefik
-      targetRevision: "41.0.1"
+      targetRevision: "41.0.2"
       helm:
         # Gateway API CRDs are managed by the dedicated `gateway-api-crds`
         # ArgoCD Application (charts/gateway-api-crds/). Skipping CRDs here
