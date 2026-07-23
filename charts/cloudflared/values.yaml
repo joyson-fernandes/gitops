@@ -3,7 +3,7 @@ env: production
 
 image:
   repository: cloudflare/cloudflared
-  tag: "2026.7.2"
+  tag: "2026.7.3"
   pullPolicy: IfNotPresent
 
 replicas: 2
