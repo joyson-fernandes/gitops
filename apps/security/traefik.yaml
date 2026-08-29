@@ -32,7 +32,7 @@ spec:
           service:
             type: LoadBalancer
             spec:
-              loadBalancerIP: "10.0.1.25"
+              loadBalancerIP: "10.0.2.232"
           api:
             dashboard: true
             insecure: false
