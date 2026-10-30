@@ -1,6 +1,6 @@
 dependencies:
 - name: langfuse
   repository: oci://ghcr.io/langfuse/langfuse-k8s/charts
-  version: 2.1.7
-digest: sha256:e568ceef05e1296c89d9fc00937b2a85ae63bb230ec257fad7cef443a72d1ae9
-generated: "2026-10-27T10:41:40.690075117Z"
+  version: 2.2.0
+digest: sha256:0471fef414a747c1a73c126967c4c11276dfca897df908443e49e586df28f961
+generated: "2026-10-30T12:44:10.90199658Z"
